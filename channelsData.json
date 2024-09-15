@@ -1,0 +1,71 @@
+{
+    "channelsMap": {
+        "dataType": "Map",
+        "value": [
+            [
+                "tfblade",
+                {
+                    "isForeignEnabled": false,
+                    "shouldThankSubscription": false,
+                    "toggleLog": true,
+                    "logColor": "green",
+                    "isFlamingEnabled": false,
+                    "toggleTempo": false,
+                    "banCount": 1,
+                    "messageDeletedCounter": 1,
+                    "timeCounter": 1,
+                    "subCounter": 1,
+                    "accountUserAge": true,
+                    "isKoreanEnabled": false
+                }
+            ],
+            [
+                "iwdominate",
+                {
+                    "isForeignEnabled": true,
+                    "shouldThankSubscription": true,
+                    "toggleLog": true,
+                    "logColor": "blue",
+                    "isFlamingEnabled": false,
+                    "toggleTempo": false,
+                    "banCount": 11,
+                    "messageDeletedCounter": 21,
+                    "timeCounter": 3,
+                    "subCounter": 82,
+                    "accountUserAge": true,
+                    "isKoreanEnabled": true
+                }
+            ],
+            [
+                "perkz_lol",
+                {
+                    "isForeignEnabled": false,
+                    "shouldThankSubscription": false,
+                    "toggleLog": true,
+                    "isFlamingEnabled": false,
+                    "toggleTempo": false,
+                    "banCount": 1,
+                    "messageDeletedCounter": 1,
+                    "timeCounter": 1,
+                    "subCounter": 1
+                }
+            ],
+            [
+                "akanemsko",
+                {
+                    "isForeignEnabled": false,
+                    "shouldThankSubscription": false,
+                    "toggleLog": true,
+                    "isFlamingEnabled": false,
+                    "toggleTempo": false,
+                    "banCount": 1,
+                    "messageDeletedCounter": 1,
+                    "timeCounter": 1,
+                    "subCounter": 1,
+                    "accountUserAge": false,
+                    "isKoreanEnabled": false
+                }
+            ]
+        ]
+    }
+}

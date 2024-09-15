@@ -1,0 +1,1 @@
+export const channelsMap: Map<string, any> = new Map();
