@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
+  "repository": {"url": "git@github.com:inmyownwords7/tsbot.git"},
   "scripts": {
     "build": "tsc",
     "start": "npm run build && node dist/src/app.js",
@@ -25,4 +26,5 @@
     "express": "^4.21.0",
     "punycode": "^2.3.1"
   }
+  
 }
