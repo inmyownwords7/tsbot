@@ -3,28 +3,43 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
-  "repository": {"url": "git@github.com:inmyownwords7/tsbot.git"},
+  "repository": {
+    "url": "git+ssh://git@github.com:inmyownwords7/tsbot.git"
+  },
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node dist/src/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "npm run build && node --no-deprecation dist/src/app.js",
+    "test": "npm run build && node --no-deprecation --inspect dist/src/app.js",
+    "inspect": "npm run build && node --inspect dist/src/app.js",
+    "docs": "typedoc --out docs src/bot.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/collections": "^5.1.5",
     "@types/express": "^4.17.21",
+    "@types/morgan": "^1.9.9",
     "@types/node": "^22.5.5",
+    "chalk": "^5.3.0",
+    "express": "^4.21.0",
+    "jsdoc": "^4.0.3",
+    "moment": "^2.30.1",
+    "morgan": "^1.10.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5.6.2"
+    "typedoc": "^0.26.7",
+    "typedoc-umlclass": "^0.10.0",
+    "typescript": "^5.6.2",
+    "winston": "^3.14.2"
   },
   "dependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/preset-env": "^7.25.4",
     "@twurple/api": "^7.1.0",
     "@twurple/auth": "^7.1.0",
     "@twurple/chat": "^7.1.0",
     "@twurple/eventsub-ws": "^7.1.0",
-    "express": "^4.21.0",
-    "punycode": "^2.3.1"
+    "collections": "^5.1.13",
+    "dotenv": "^16.4.5"
   }
-  
 }

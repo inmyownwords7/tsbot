@@ -1,9 +1,45 @@
-import express from 'express';
-import { bot } from './bot.js';
-//**@app declaration */
-const app =  express();
+import express, { Request, Response, NextFunction } from "express";
+import morgan from "morgan";
+import dotenv from "dotenv";
+import { bot } from "./bot.js";
+import { logHttpMessage } from "./modules/logger.js";
+import path from 'path';
+import fs from 'fs';
+dotenv.config();
+
+const app = express();
+const port: number = Number(process.env.PORT) || 29800;
+
+app.use(
+  morgan("combined", {
+    stream: { write: (message: string) => logHttpMessage(message.trim()) },
+  })
+);
+
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
+
+// Error handling middleware
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  console.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
 async function main() {
-    await bot();
-    // app.listen(3000, () => console.log('Server is running on port 3000'));
+  await bot();
+  const server = app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+  });
+
+  // Graceful shutdown
+  process.on('SIGINT', () => {
+    console.log("Shutting down gracefully...");
+    server.close(() => {
+      console.log("Server closed.");
+      process.exit(0);
+    });
+  });
 }
+
 main();

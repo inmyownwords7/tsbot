@@ -1,11 +1,13 @@
 // authProviderSetup.ts
 import { RefreshingAuthProvider } from '@twurple/auth';
 import { promises as fs } from 'fs';
+import { ApiClient } from '@twurple/api';
 
 interface AuthConfig {
     clientId: string;
     clientSecret: string;
 }
+
 
 const credentials: AuthConfig = {
     clientId: 'smnmi4qw3ybcemb10k3ty22v1sak2m',
@@ -29,5 +31,10 @@ initializeAuthProvider()
     .then(() => console.log('AuthProvider initialized successfully'))
     .catch(err => console.error('An error occurred during initialization:', err));
 await authProvider.addUserForToken(tokenData);
+const api: ApiClient = new ApiClient({authProvider})
 authProvider.addIntentsToUser(userId, ['chat', 'api'])
-export { authProvider };
+// Initialize the ApiClient with the authProvider
+
+// Function to bind the `asUser` API and store it
+
+export { authProvider, api };
