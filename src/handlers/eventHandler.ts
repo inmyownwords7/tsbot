@@ -98,19 +98,6 @@ function handleJoin(channel: string, user: string): void {
   console.log(`${user} has joined ${channel}`);
 }
 
-function handleSub(
-  channel: string,
-  user: string,
-  subInfo: any,
-  msg: any
-): void {
-  console.log(
-    `${user} just subscribed in ${channel}! Subscription details: ${JSON.stringify(
-      subInfo
-    )}`
-  );
-}
-
 // Define a type for chat message handlers
 type ChatHandler = (
   channel: string,

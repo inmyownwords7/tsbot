@@ -3,8 +3,7 @@ import morgan from "morgan";
 import dotenv from "dotenv";
 import { bot } from "./bot.js";
 import { logHttpMessage } from "./modules/logger.js";
-import path from 'path';
-import fs from 'fs';
+import {path, fs} from "./index.js"
 
 dotenv.config();
 const app = express();

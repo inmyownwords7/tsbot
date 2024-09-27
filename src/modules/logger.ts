@@ -1,6 +1,7 @@
 import { createLogger, format, Logger, transports } from "winston";
 import { DATE_FORMAT } from "../formatting/constants.js";
 import { colors } from "../formatting/chalk.js";
+import stripAnsi from "strip-ansi";
 /**
  * Creates a chat logger for a specific channel
  * @param {string} channel - The name of the chat channel
@@ -52,7 +53,9 @@ const createChatLogger = async (
     ),
     transports: [
       new transports.Console(),
-      new transports.File({ filename: "chat.log" }),
+      new transports.File({ filename: "chat.log",
+        format: format.printf(({ level, message, timestamp }) => stripAnsi(`${timestamp} [CHAT ${level}]: ${message}`)) // No color formatting here
+       }),
     ],
   });
 };
@@ -91,7 +94,8 @@ export const logChatMessage = async (
   metadata: MessageMetaData
 ): Promise<void> => {
   const logger = await createChatLogger(channel, metadata); // Create logger for each channel
-  const message = `${channel}: ${user}: ${text}`.replaceAll(/\[3[^ ]m/g, "");
+  // const message = `${channel}: ${user}: ${text}`.replaceAll(/\[3[^ ]m/g, "");
+  const message: string = `${channel}: ${user}: ${text}`
   logger.info(message); // Log the message using the channel-specific logger
 };
 

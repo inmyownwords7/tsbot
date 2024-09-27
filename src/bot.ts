@@ -14,6 +14,7 @@ import { authProvider, api } from "./modules/auth.js";
 import { userId, DATE_FORMAT, handleMessage } from "./index.js";
 import { colors } from "./formatting/chalk.js";
 // import { logChatMessage } from "./modules/logger.js";
+import { logChatMessage } from './modules/logger.js';
 
 // <reference path="index.d.ts" />
 //TODO setup api. Assign env variables. Create a count helper function
@@ -163,6 +164,7 @@ function Events(): void {
   chatClient.onSubExtend(handleSubscription("extend"));
   chatClient.onResub(handleSubscription("resub"));
   chatClient.onCommunitySub(handleSubscription("community"));
+
 }
 
 async function apiEvents(): Promise<void> {
