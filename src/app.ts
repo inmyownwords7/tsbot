@@ -5,8 +5,8 @@ import { bot } from "./bot.js";
 import { logHttpMessage } from "./modules/logger.js";
 import path from 'path';
 import fs from 'fs';
-dotenv.config();
 
+dotenv.config();
 const app = express();
 const port: number = Number(process.env.PORT) || 29800;
 

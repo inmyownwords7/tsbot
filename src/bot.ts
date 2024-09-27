@@ -1,3 +1,5 @@
+/// <reference path="../types.d.ts" />
+
 import {
   ChatClient,
   ChatCommunitySubInfo,
@@ -5,13 +7,14 @@ import {
   ChatSubExtendInfo,
   ChatSubInfo,
   UserNotice,
-} from "@twurple/chat";
-import { authProvider } from "./modules/auth.js";
+} from "./index.js";
+
 import { channelsMap } from "./utils/async config.js";
+import { authProvider, api } from "./modules/auth.js";
+import { userId, DATE_FORMAT, handleMessage } from "./index.js";
 import { colors } from "./formatting/chalk.js";
-import { DATE_FORMAT } from "./formatting/constants.js";
-import { logChatMessage } from "./modules/logger.js";
-import { api } from "./modules/auth.js";
+// import { logChatMessage } from "./modules/logger.js";
+
 // <reference path="index.d.ts" />
 //TODO setup api. Assign env variables. Create a count helper function
 // **@chatClient declaration */
@@ -20,7 +23,7 @@ import { api } from "./modules/auth.js";
  *
  * @type {*}
  */
-export const chatClient: ChatClient = new ChatClient({
+const chatClient: ChatClient = new ChatClient({
   authProvider,
   channels: Array.from(channelsMap.keys()),
   webSocket: true,
@@ -45,18 +48,6 @@ let GroupArrayIds: string[] = [];
  *
  * @type {MessageMetaData}
  */
-type MessageMetaData = {
-  isMod?: boolean; // Assuming this should be a boolean
-  isVip?: boolean; // Assuming this should be a boolean
-  isBroadcaster?: boolean; // Assuming this should be a boolean
-  isParty?: boolean; // Assuming this should be a boolean
-  isStaff?: boolean; // Assuming this should be a boolean
-  isDeputy?: boolean; // Assuming this should be a boolean
-  isEntitled?: boolean; // Assuming this should be a boolean
-  isPermitted?: boolean; // Assuming this should be a boolean
-  channelId?: string; // Required string
-  userId?: string; // Required string
-};
 
 /**
  * Description placeholder
@@ -66,103 +57,13 @@ type MessageMetaData = {
  * @param {string} text
  * @param {ChatMessage} msg
  */
-export function handleMessage(
-  channel: string,
-  user: string,
-  text: string,
-  msg: ChatMessage
-): void {
-  const messageMetaData: MessageMetaData = {
-    isMod: msg.userInfo.isMod || false, // Handles falsy values other than null/undefined
-    isVip: msg.userInfo.isVip || false,
-    isBroadcaster: msg.userInfo.isBroadcaster || false,
-    isParty:
-      GroupArray.includes(user) ||
-      GroupArrayIds.includes(msg.userInfo.userId || ""),
-    isStaff: msg.userInfo.isMod || false || msg.userInfo.isBroadcaster || false,
-    isDeputy:
-      GroupArray.includes(user) ||
-      GroupArrayIds.includes(msg.userInfo.userId || ""),
-    isEntitled:
-      msg.userInfo.isMod ||
-      false ||
-      msg.userInfo.isVip ||
-      false ||
-      msg.userInfo.isBroadcaster ||
-      false,
-    isPermitted:
-      (msg.userInfo.isMod || false || msg.userInfo.isBroadcaster || false) &&
-      GroupArray.includes(user),
-    channelId: msg.channelId || "", // Handles other falsy values as well
-    userId: msg.userInfo.userId || "",
-  };
 
-  const messageHandlers: Array<
-    (
-      channel: string,
-      user: string,
-      text: string,
-      msg: ChatMessage,
-      messageMetaData: MessageMetaData
-    ) => void
-    //**@chatHandlers are added here.*/
-  > = [commandHandler];
-
-  for (const handler of messageHandlers) {
-    handler(channel, user, text, msg, messageMetaData);
-  }
-
-  function commandHandler(
-    channel: string,
-    user: string,
-    text: string,
-    msg: ChatMessage,
-    messageMetaData: MessageMetaData
-  ) {
-    const command = text.split(" ")[0];
-    if (!command.startsWith("!")) {
-      return; // Ignore messages that aren't commands
-    }
-
-    const commandHandlers: Record<
-      string,
-      (channel: string, user: string, messageMetaData: MessageMetaData) => void
-    > = {
-      "!quit": handleQuitCommand,
-      "!help": handleHelpCommand,
-      // Add more commands here
-    };
-
-    const handler = commandHandlers[command];
-    if (handler) {
-      handler(channel, user, messageMetaData);
-    } else {
-      console.log(`Unknown command: ${user}: ${command}`);
-    }
-  }
-
-  function handleQuitCommand(
-    channel: string,
-    user: string,
-    messageMetaData: MessageMetaData
-  ) {
-    if (messageMetaData.isMod && channel === "iwdominate") {
-      chatClient.quit();
-      console.log(`${user} has quit the chat.`);
-    }
-  }
-
-  function handleHelpCommand(channel: string, user: string) {
-    chatClient.say(channel, "Available commands: !quit, !help, ...");
-  }
-  logChatMessage(channel, user, text, messageMetaData);
-}
 
 /**
  * Description placeholder
  * @returns {Promise<void>}
  */
-export async function bot(): Promise<void> {
+async function bot(): Promise<void> {
   try {
     chatClient.connect(); // Wait for the connection to succeed
     console.log("Connected to Twitch chat");
@@ -181,9 +82,8 @@ function Events(): void {
       colors.defaultColor(`${DATE_FORMAT}: ${user} has joined ${channel}`)
     );
   });
-  const giftCounts = new Map<string, number>();
-  type SubscriptionType = "new" | "extend" | "resub" | "community";
 
+  const giftCounts = new Map<string, number>();
   const handleSubscription = (subscriptionType: SubscriptionType) => {
     return (
       channel: string,
@@ -258,11 +158,31 @@ function Events(): void {
   function isChatCommunitySubInfo(info: any): info is ChatCommunitySubInfo {
     return (info as ChatCommunitySubInfo).count !== undefined;
   }
-
   // Setting up event handlers
   chatClient.onSub(handleSubscription("new"));
   chatClient.onSubExtend(handleSubscription("extend"));
   chatClient.onResub(handleSubscription("resub"));
   chatClient.onCommunitySub(handleSubscription("community"));
 }
+
+async function apiEvents(): Promise<void> {
+  async function timeout(duration: number, reason: string, user: string) {
+    await api.asUser(userId, async (ctx) => {
+      try {
+        await ctx.moderation.banUser(userId, {
+          duration: duration, // Make sure 'number' is defined
+          reason: reason, // Make sure 'explanation' is defined
+          user: user, // Make sure 'user_Id' is defined
+        });
+      } catch (error) {
+        console.error("Error banning user:", error); // Provide error details
+      }
+    });
+  }
+
+  // Call the timeout function to execute the logic
+  await timeout(60, "he is trash", "woordbot");
+}
+
 Events();
+export {chatClient, apiEvents, bot };

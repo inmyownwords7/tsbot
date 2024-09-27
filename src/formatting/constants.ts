@@ -12,5 +12,5 @@ const SUCCESS_MESSAGES: {loginSuccess: string, registrationComplete: string} = {
     loginSuccess: 'Login successful',
     registrationComplete: 'Registration completed',
 };
-
-export {DATE_FORMAT, CHANNEL_DATA, ERROR_MESSAGES, SUCCESS_MESSAGES};
+const userId: string = "132881296"
+export {DATE_FORMAT, CHANNEL_DATA, ERROR_MESSAGES, SUCCESS_MESSAGES, userId};
