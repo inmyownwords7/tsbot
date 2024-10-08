@@ -3,12 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
+  "main": "dist/src/app.js",
   "repository": {
     "url": "git+ssh://git@github.com:inmyownwords7/tsbot.git"
   },
   "scripts": {
     "build": "tsc",
-    "start": "npm run build && node --no-deprecation dist/src/app.js",
+    "start": "npm run build && node --no-deprecation dist/src/app.js tsc --traceResolution",
     "test": "npm run build && node --no-deprecation --inspect dist/src/app.js",
     "inspect": "npm run build && node --inspect dist/src/app.js",
     "docs": "typedoc --out docs src/bot.ts"
@@ -44,6 +45,12 @@
     "@twurple/chat": "^7.1.0",
     "@twurple/eventsub-ws": "^7.1.0",
     "collections": "^5.1.13",
+    "module-alias": "^2.2.3",
     "strip-ansi": "^7.1.0"
+  },
+  "_moduleAliases": {
+    "@bot": "dist/bot",
+    "@utils": "dist/utils",
+    "@components": "dist/components"
   }
 }

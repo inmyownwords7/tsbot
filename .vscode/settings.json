@@ -1,3 +1,16 @@
 {
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/node_modules": true,
+    ".vscode/launch.json": true,
+    "dist/src": false,
+    "docs": true
+  },
+  "hide-files.files": [".vscode/launch.json", "dist/src", "docs", "dist"]
 }

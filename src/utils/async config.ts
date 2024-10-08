@@ -7,92 +7,92 @@ import { CHANNEL_DATA } from "../formatting/constants.js";
  * @interface ChannelConfig
  * @type {ChannelConfig}
  */
-interface ChannelConfig {
-  /**
-   * Description placeholder
-   * @event date 1:09:21 pm
-   *
-   * @type {boolean}
-   */
-  isForeignEnabled: boolean;
-  /**
-   * Description placeholder
-   * @event date 1:09:21 pm
-   *
-   * @type {boolean}
-   */
-  shouldThankSubscription: boolean;
-  /**
-   * Description placeholder
-   * @event date 1:09:21 pm
-   *
-   * @type {boolean}
-   */
-  toggleLog: boolean;
-  /**
-   * Description placeholder
-   * @event date 1:09:21 pm
-   *
-   * @type {string}
-   */
-  logColor: string;
-  /**
-   * Description placeholder
-   * @event date 1:09:21 pm
-   *
-   * @type {boolean}
-   */
-  isFlamingEnabled: boolean;
-  /**
-   * Description placeholder
-   * @event date 1:09:21 pm
-   *
-   * @type {boolean}
-   */
-  toggleTempo: boolean;
-  /**
-   * Description placeholder
-   * @event date 1:09:21 pm
-   *
-   * @type {number}
-   */
-  banCount: number;
-  /**
-   * Description placeholder
-   * @event date 1:09:21 pm
-   *
-   * @type {number}
-   */
-  messageDeletedCounter: number;
-  /**
-   * Description placeholder
-   * @event date 1:09:21 pm
-   *
-   * @type {number}
-   */
-  timeCounter: number;
-  /**
-   * Description placeholder
-   * @event date 1:09:21 pm
-   *
-   * @type {number}
-   */
-  subCounter: number;
-  /**
-   * Description placeholder
-   * @event date 1:09:20 pm
-   *
-   * @type {boolean}
-   */
-  accountUserAge: boolean;
-  /**
-   * Description placeholder
-   * @event date 1:09:20 pm
-   *
-   * @type {boolean}
-   */
-  isKoreanEnabled: boolean;
-}
+// interface ChannelConfig {
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:21 pm
+//    *
+//    * @type {boolean}
+//    */
+//   isForeignEnabled: boolean;
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:21 pm
+//    *
+//    * @type {boolean}
+//    */
+//   shouldThankSubscription: boolean;
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:21 pm
+//    *
+//    * @type {boolean}
+//    */
+//   toggleLog: boolean;
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:21 pm
+//    *
+//    * @type {string}
+//    */
+//   logColor: string;
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:21 pm
+//    *
+//    * @type {boolean}
+//    */
+//   isFlamingEnabled: boolean;
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:21 pm
+//    *
+//    * @type {boolean}
+//    */
+//   toggleTempo: boolean;
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:21 pm
+//    *
+//    * @type {number}
+//    */
+//   banCount: number;
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:21 pm
+//    *
+//    * @type {number}
+//    */
+//   messageDeletedCounter: number;
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:21 pm
+//    *
+//    * @type {number}
+//    */
+//   timeCounter: number;
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:21 pm
+//    *
+//    * @type {number}
+//    */
+//   subCounter: number;
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:20 pm
+//    *
+//    * @type {boolean}
+//    */
+//   accountUserAge: boolean;
+//   /**
+//    * Description placeholder
+//    * @event date 1:09:20 pm
+//    *
+//    * @type {boolean}
+//    */
+//   isKoreanEnabled: boolean;
+// }
 
 /**
  * Description placeholder
@@ -151,7 +151,11 @@ function jsonReplacer(key: string, value: unknown): unknown {
  * @returns {*}
  */
 function jsonReviver(key: string, value: unknown): unknown {
-  if (typeof value === "object" && value !== null && (value as { dataType?: string }).dataType === "Map") {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { dataType?: string }).dataType === "Map"
+  ) {
     return new Map((value as { value: [string, unknown][] }).value);
   }
   return value;

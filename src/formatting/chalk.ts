@@ -5,7 +5,16 @@ function getRGB(r: number, g: number, b: number): ChalkInstance {
   return chalk.rgb(r, g, b);
 }
 
-export const colors: Record<string, ChalkInstance> = {
+const colorMap: Record<LogColor, ChalkInstance> = {
+  red: chalk.red,
+  blue: chalk.blue,
+  green: chalk.green,
+  yellow: chalk.yellow,
+  magenta: chalk.magenta,
+  cyan: chalk.cyan,
+};
+
+const colors: Record<string, ChalkInstance> = {
   tfblade: chalk.green,
   iwdominate: chalk.blue,
   akanemko: chalk.red,
@@ -19,14 +28,20 @@ export const colors: Record<string, ChalkInstance> = {
   self: getRGB(55, 90, 55),
 };
 
-export const permissions: Record<string, ChalkInstance> = {
+const permissions: Record<string, ChalkInstance> = {
   moderator: chalk.greenBright,
   deputy: chalk.yellowBright,
   admin: chalk.redBright,
   owner: chalk.whiteBright,
   defaultColor: chalk.cyan,
 };
+
+// Function to get Chalk instance from logColor string
+function getColor(logColor: string): ChalkInstance {
+  return colorMap[logColor as LogColor] || chalk.cyan; // Default to cyan if logColor is invalid
+}
+
 // export function defaultColor(arg0: string): any {
 //   throw new Error("Function not implemented.");
 // }
-
+export {colors, getColor, permissions}

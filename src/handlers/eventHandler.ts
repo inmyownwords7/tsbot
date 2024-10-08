@@ -1,139 +1,78 @@
-// eventHandlers.ts
 import { chatClient } from "../bot.js"; // Assuming chatClient is defined in bot.ts
 import { logChatMessage, ChatMessage } from "../index.js";
-let GroupArray: string[] = [];
-let GroupArrayIds: string[] = [];
-function handleMessage(
+
+let activeUserGroups: string[] = [];
+let activeUserGroupsIds: string[] = [];
+
+function processChatMessage(
   channel: string,
   user: string,
   text: string,
   msg: ChatMessage
 ): void {
-  const messageMetaData: MessageMetaData = {
-    isMod: msg.userInfo.isMod || false, // Handles falsy values other than null/undefined
+  const userMessageMetadata: MessageMetaData = {
+    isMod: msg.userInfo.isMod || false,
     isVip: msg.userInfo.isVip || false,
     isBroadcaster: msg.userInfo.isBroadcaster || false,
-    isParty:
-      GroupArray.includes(user) ||
-      GroupArrayIds.includes(msg.userInfo.userId || ""),
-    isStaff: msg.userInfo.isMod || false || msg.userInfo.isBroadcaster || false,
-    isDeputy:
-      GroupArray.includes(user) ||
-      GroupArrayIds.includes(msg.userInfo.userId || ""),
-    isEntitled:
-      msg.userInfo.isMod ||
-      false ||
-      msg.userInfo.isVip ||
-      false ||
-      msg.userInfo.isBroadcaster ||
-      false,
-    isPermitted:
-      (msg.userInfo.isMod || false || msg.userInfo.isBroadcaster || false) &&
-      GroupArray.includes(user),
-    channelId: msg.channelId || "", // Handles other falsy values as well
+    isParty: activeUserGroups.includes(user) || activeUserGroupsIds.includes(msg.userInfo.userId || ""),
+    isStaff: msg.userInfo.isMod || msg.userInfo.isBroadcaster || false,
+    isDeputy: activeUserGroups.includes(user) || activeUserGroupsIds.includes(msg.userInfo.userId || ""),
+    isEntitled: msg.userInfo.isMod || msg.userInfo.isVip || msg.userInfo.isBroadcaster || false,
+    isPermitted: (msg.userInfo.isMod || msg.userInfo.isBroadcaster) && activeUserGroups.includes(user),
+    channelId: msg.channelId || "",
     userId: msg.userInfo.userId || "",
   };
 
-  const messageHandlers: Array<
-    (
-      channel: string,
-      user: string,
-      text: string,
-      msg: ChatMessage,
-      messageMetaData: MessageMetaData
-    ) => void
-  > = [commandHandler];
-
-  for (const handler of messageHandlers) {
-    handler(channel, user, text, msg, messageMetaData);
-  }
-
-  function commandHandler(
-    channel: string,
-    user: string,
-    text: string,
-    msg: ChatMessage,
-    messageMetaData: MessageMetaData
-  ) {
-    const command = text.split(" ")[0];
-    if (!command.startsWith("!")) {
-      return; // Ignore messages that aren't commands
-    }
-
-    const commandHandlers: Record<
-      string,
-      (channel: string, user: string, messageMetaData: MessageMetaData) => void
-    > = {
-      "!quit": handleQuitCommand,
-      "!help": handleHelpCommand,
-      // Add more commands here
-    };
-
-    const handler = commandHandlers[command];
-    if (handler) {
-      handler(channel, user, messageMetaData);
-    } else {
-      console.log(`Unknown command: ${user}: ${command}`);
-    }
-  }
-
-  function handleQuitCommand(
-    channel: string,
-    user: string,
-    messageMetaData: MessageMetaData
-  ) {
-    if (messageMetaData.isMod && channel === "iwdominate") {
-      chatClient.quit();
-      console.log(`${user} has quit the chat.`);
-    }
-  }
-
-  function handleHelpCommand(channel: string, user: string) {
-    chatClient.say(channel, "Available commands: !quit, !help, ...");
-  }
-  logChatMessage(channel, user, text, messageMetaData);
+  executeCommand(channel, user, text, msg, userMessageMetadata);
 }
 
-function handleJoin(channel: string, user: string): void {
-  console.log(`${user} has joined ${channel}`);
-}
-
-// Define a type for chat message handlers
-type ChatHandler = (
+function executeCommand(
   channel: string,
   user: string,
   text: string,
-  msg: ChatMessage
-) => void;
-
-// Function to handle chat messages
-function chatHandler(
-  channel: string,
-  user: string,
-  text: string,
-  msg: ChatMessage
+  msg: ChatMessage,
+  userMessageMetadata: MessageMetaData
 ): void {
-  // Define a map of commands and their associated handler functions
-  const commandHandlers: Record<string, ChatHandler> = {
-    "!hello": handleHelloCommand,
+  const command = text.split(" ")[0];
 
-    // Add more commands and their handlers here
+  // Check if the command starts with "!"
+  if (!command.startsWith("!")) return; 
+
+  const commandHandlers: Record<
+    string,
+    (channel: string, user: string, userMessageMetadata: MessageMetaData) => void
+  > = {
+    "!quit": quitChatHandler,
+    "!help": helpCommandHandler,
+   
+    // Add more commands here
   };
 
-  // Check if the message text starts with a command
-  const command = text.split(" ")[0]; // Get the first word as command
-
-  if (command in commandHandlers) {
-    // Call the appropriate handler if the command is found
-    commandHandlers[command](channel, user, text, msg);
+  const handler = commandHandlers[command];
+  if (handler) {
+    handler(channel, user, userMessageMetadata);
   } else {
-    // Handle unknown command or regular messages
-    console.log(`${user} sent an unrecognized command: ${text}`);
+    console.log(`Unknown command: ${user}: ${command}`);
   }
+}
+
+function quitChatHandler(
+  channel: string,
+  user: string,
+  userMessageMetadata: MessageMetaData
+): void {
+  if (userMessageMetadata.isMod && channel === "iwdominate") {
+    chatClient.quit();
+    console.log(`${user} has quit the chat.`);
+  }
+}
+
+function helpCommandHandler(channel: string, user: string): void {
+  chatClient.say(channel, "Available commands: !quit, !help, !hello");
 }
 
 // Example command handler for a hello command
-function handleHelloCommand(
+function greetUserHandler(
   channel: string,
   user: string,
   text: string,
@@ -141,4 +80,5 @@ function handleHelloCommand(
 ): void {
   chatClient.say(channel, `Hello, ${user}! Welcome to the channel!`);
 }
-export { chatHandler, handleMessage };
+
+export { processChatMessage };

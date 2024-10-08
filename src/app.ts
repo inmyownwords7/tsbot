@@ -1,9 +1,9 @@
+// import 'module-alias/register.js';
 import express, { Request, Response, NextFunction } from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
-import { bot } from "./bot.js";
+import {bot} from "./bot.js"
 import { logHttpMessage } from "./modules/logger.js";
-import {path, fs} from "./index.js"
 
 dotenv.config();
 const app = express();
@@ -25,7 +25,7 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
   res.status(500).send('Something broke!');
 });
 
-async function main() {
+export async function main() {
   await bot();
   const server = app.listen(port, () => {
     console.log(`Server running at http://localhost:${port}`);

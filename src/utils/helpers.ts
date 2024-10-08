@@ -1,30 +1,220 @@
-import path from 'path'
+import path from "path";
 
-function isCommand(command: string | any[], text: string) {
-    if (text.substring(0, command.length) === command) {
-        const args = text.substring(command.length + 1, text.length).split(' ')
-        return args || true
+function isCommand(
+  commands: string | string[],
+  text: string
+): string[] | false {
+  // Convert commands to an array if it's a single string
+  const commandArray = Array.isArray(commands) ? commands : [commands];
+
+  // Loop through each command in the commandArray
+  for (const command of commandArray) {
+    // Check if the text starts with the current command
+    if (text.trim().toLowerCase().startsWith(command.toLowerCase())) {
+      // Extract and return the arguments following the command as an array
+      const args = text.substring(command.length).trim().split(/\s+/); // Split by whitespace
+      return args; // Return the arguments if found
     }
-    return false
+  }
+  // Return false if no command matches
+  return false;
 }
 
-function modCommand(STRINGSTART:string, text:string, messageMetaData: { isMod: any  }) {
-    if (!messageMetaData.isMod) return false
-    return isCommand(STRINGSTART, text)
+function modCommand(
+  STRINGSTART: string | string[],
+  text: string,
+  userMessageMetadata: { isMod: boolean }
+) {
+  if (!userMessageMetadata.isMod) return false;
+  return isCommand(STRINGSTART, text);
 }
 
-function deputyCommand(STRINGSTART: any, text: any, messageMetaData: { isDeputy: any }) {
-    if (!messageMetaData.isDeputy) return false
-    return isCommand(STRINGSTART, text)
+function deputyCommand(
+  STRINGSTART: string | string[],
+  text: string,
+  userMessageMetadata: { isDeputy: boolean }
+) {
+  if (!userMessageMetadata.isDeputy) return false;
+  return isCommand(STRINGSTART, text);
 }
 
 function absolutePath(from: string, to: string): string {
-    return path.resolve(from, to)
+  return path.resolve(from, to);
 }
 
-function isTextStarting(pattern: string, text: string) {
-    const startString = text.startsWith(pattern)
-    return startString
+function searchPattern(pattern: string | string[], text: string): boolean {
+  if (Array.isArray(pattern)) {
+    return pattern.some((p) => new RegExp(p, "i").test(text));
+  }
+
+  const regex = new RegExp(pattern, "i"); // Create a regex pattern with case-insensitive flag
+  return regex.test(text); // Returns true if the pattern is found, otherwise false
+}
+function formatTimeComponent(value: number, label: string) {
+  return `${value} ${label}${value !== 1 ? "s" : ""}`;
 }
 
-export {absolutePath, isTextStarting, modCommand, deputyCommand}
+function formatUptime(botTime: number) {
+  const timeComponents = [];
+
+  if (botTime >= 86400 * 30.44) {
+    const months = Math.floor(botTime / (86400 * 30.44));
+    botTime -= months * (86400 * 30.44);
+    timeComponents.push(formatTimeComponent(months, "month"));
+  }
+
+  if (botTime >= 604800) {
+    const weeks = Math.floor(botTime / (86400 * 7));
+    botTime -= weeks * (86400 * 7);
+    timeComponents.push(formatTimeComponent(weeks, "week"));
+  }
+
+  if (botTime >= 86400) {
+    const days = Math.floor(botTime / 86400);
+    botTime -= days * 86400;
+    timeComponents.push(formatTimeComponent(days, "day"));
+  }
+
+  if (botTime >= 3600) {
+    const hours = Math.floor(botTime / 3600);
+    botTime -= hours * 3600;
+    timeComponents.push(formatTimeComponent(hours, "hour"));
+  }
+
+  if (botTime >= 60) {
+    const minutes = Math.floor(botTime / 60);
+    botTime -= minutes * 60;
+    timeComponents.push(formatTimeComponent(minutes, "minute"));
+  }
+
+  if (botTime > 0) {
+    timeComponents.push(formatTimeComponent(botTime, "second"));
+  }
+  return timeComponents.join(", ");
+}
+
+function botUptime() {
+  const botTime = Math.floor(process.uptime());
+  const formattedUptime = formatUptime(botTime);
+  // Regex is required below because the general font color is blue.
+  // eslint-disable-next-line no-control-regex
+  return formattedUptime.replaceAll(/\[3[^ ]m/g, '');
+}
+
+setInterval(() => {
+  botUptime();
+}, 60000);
+
+
+// call systemHandler here to restart bot in case of crash or disconnect.
+// setInterval(() => {
+//     checkForAndAnnounceNewTweet();
+// }, (TWEET_TIMER * variable.m));//every 10 sec
+// reset();
+
+// function formatUptime(botTime) {
+// const timeComponents = [];
+
+// if (botTime >= 86400 * 30.44) {
+//   const months = Math.floor(botTime / (86400 * 30.44));
+//   botTime -= months * (86400 * 30.44);
+//   timeComponents.push(formatTimeComponent(months, 'month'));
+// }
+
+// if (botTime >= 604800) {
+//   const weeks = Math.floor(botTime / (86400 * 7));
+//   botTime -= weeks * (86400 * 7);
+//   timeComponents.push(formatTimeComponent(weeks, 'week'));
+// }
+
+// if (botTime >= 86400) {
+//   const days = Math.floor(botTime / 86400);
+//   botTime -= days * 86400;
+//   timeComponents.push(formatTimeComponent(days, 'day'));
+// }
+
+// if (botTime >= 3600) {
+//   const hours = Math.floor(botTime / 3600);
+//   botTime -= hours * 3600;
+//   timeComponents.push(formatTimeComponent(hours, 'hour'));
+// }
+
+// if (botTime >= 60) {
+//   const minutes = Math.floor(botTime / 60);
+//   botTime -= minutes * 60;
+//   timeComponents.push(formatTimeComponent(minutes, 'minute'));
+// }
+
+// if (botTime > 0) {
+//   timeComponents.push(formatTimeComponent(botTime, 'second'));
+// }
+
+// return colors.yellow(timeComponents.join(', '));
+// }
+// function botUptime() {
+//   const botTime = Math.floor(process.uptime());
+//   console.log(botTime)
+//   // const formattedUptime = formatUptime(botTime);
+//   // Regex is required below because the general font color is blue.
+//   // eslint-disable-next-line no-control-regex
+//   // return colors.blue(formattedUptime.replaceAll(/\[3[^ ]m/g, ''));
+// }
+
+// async function startChecking(toggle) {
+//   try {
+//     if (toggle) {
+//       toggle = false;
+//     } else isOnline = await isStreamOnline('iwdominate');
+//     if (isOnline && toggle) {
+//       //console.log("checking")
+//       return true;
+//     } else {
+//       //console.log("nope")
+//       return false;
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     return false;
+//   }
+// }
+// async function repeatMessage(toggle) {
+//   try {
+//     if (toggle) {
+//       return false;
+//     } else isOnline = await isStreamOnline('iwdominate');
+//     if (isOnline && toggle) {
+//       console.log('checking');
+//       streamerToLogger['iwdominate'].alert(
+//         'iwdominate: Please join the ESB Discord @ https://discord.gg/XMZKWv5D for a chance to win $20 USDT'
+//       );
+//       chatClient.say(
+//         'iwdominate',
+//         'Please join the ESB Discord @ https://discord.gg/XMZKWv5D for a chance to win $20 USDT'
+//       );
+//       return true;
+//     } else {
+//       console.log('nope');
+//       return false;
+//     }
+//   } catch (error) {
+//     console.error(error);
+//   }
+// }
+
+// function schedulePeriodicCheck() {
+//   startChecking();
+//   // setTimeout(() => {
+//   //   schedulePeriodicCheck();
+//   // }, 1 * 60 * 1000); // 15 minutes in milliseconds
+//   // setInterval(() => {
+//   //   chatClient.say('iwdominate', "Please join the ESB Discord @ https://discord.gg/XMZKWv5D for a chance to win $20 USDT");
+//   // }, INTERVALDURATION)
+
+//   setInterval(repeatMessage, INTERVALDURATION);
+//   setInterval(startChecking, 60 * 1000); // Repeat every 1 minutes
+// }
+
+// if (toggle) {
+//   schedulePeriodicCheck();
+// }
+export { absolutePath, searchPattern, modCommand, deputyCommand, isCommand, formatUptime };
