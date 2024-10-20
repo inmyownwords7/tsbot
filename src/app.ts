@@ -3,7 +3,7 @@ import express, { Request, Response, NextFunction } from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import {bot} from "./bot.js"
-import { logHttpMessage } from "./modules/logger.js";
+import { logHttpRequest } from "./modules/logger.js";
 
 dotenv.config();
 const app = express();
@@ -11,7 +11,7 @@ const port: number = Number(process.env.PORT) || 29800;
 
 app.use(
   morgan("combined", {
-    stream: { write: (message: string) => logHttpMessage(message.trim()) },
+    stream: { write: (message: string) => logHttpRequest(message.trim()) },
   })
 );
 

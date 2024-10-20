@@ -1,12 +1,55 @@
-import { createLogger, format, Logger, transports } from "winston";
+import { addColors, createLogger, format, Logger, transports } from "winston";
 import "winston-daily-rotate-file";
-import { getTimeFormat } from "../formatting/constants.js";
-import { colors, getColor } from "../formatting/chalk.js";
+import { botId, getTimeFormat } from "../formatting/constants.js";
 import stripAnsi from "strip-ansi";
-import { channelsMap } from "../utils/async config.js";
+import {
+  channels,
+  channelsMap,
+  channelColors,
+  updateChannelColor,
+} from "../utils/async config.js";
 import { ChatMessage } from "@twurple/chat";
+import chalk, { ChalkInstance } from "chalk";
+let { red, blue, green, white, greenBright, cyan } = chalk;
 
+export let roleToRoleColor = new Map<string, ChalkInstance>([
+  ["self", cyan],
+  ["broadcaster", red],
+  ["moderator", blue],
+  ["vip", green],
+  ["subscriber", greenBright],
+  ["pleb", white],
+]);
 
+const customLevels = {
+  levels: {
+    fatal: 0, // Highest priority
+    error: 1,
+    warn: 2,
+    success: 3, // Custom level: success
+    info: 4,
+    debug: 5,
+    trace: 6, // Lowest priority
+  },
+  // Step 2: Define colors for the custom levels (Optional)
+  colors: {
+    fatal: "red",
+    error: "red",
+    warn: "yellow",
+    success: "green", // Custom color: green for success
+    info: "blue",
+    debug: "cyan",
+    trace: "magenta",
+  },
+};
+addColors(customLevels.colors);
+
+const jsonFormat = format.combine(
+  format.json(),
+  format.colorize(),
+  format.align(),
+  format.printf((info) => `${info.level} ${info.message}`)
+);
 /**
  * Creates a chat logger for a specific channel
  * @param {string} channel - The name of the chat channel
@@ -14,84 +57,72 @@ import { ChatMessage } from "@twurple/chat";
  * @returns {Logger} Winston logger instance
  */
 
-const channelLogger = new Map();
-const createChatLogger = async (
+const channelLoggersMap = new Map();
+
+const initializeChannelLogger = async (
   channel: string,
-  metadata: MessageMetaData | undefined,
+  user: string,
   msg: ChatMessage
 ): Promise<Logger> => {
-  if (channelLogger.has(channel)) {
-    return channelLogger.get(channel);
+  if (channelLoggersMap.has(channel)) {
+    return channelLoggersMap.get(channel);
   }
 
   const channelConfig = channelsMap.get(channel);
-  // console.log(channel);
   if (!channelConfig) {
     console.warn(`No config found for channel: ${channel}`);
   } else {
     // console.log(`Channel config for ${channel}:`, channelConfig);
   }
-  // console.log(channelConfig?.logColor + " line 27 ")
-  // console.log("Channel config:" + " line 28");
+
   if (!channelConfig || !channelConfig.toggleLog) {
     throw new Error(`Logging is disabled for channel: ${channel}`);
   }
 
+  let channelColor = chalk.hex(channelConfig.logColor);
+  // console.log(channelConfig.logColor);
   const logger = createLogger({
     level: "info",
     format: format.combine(
-      format.timestamp({ format: () => getTimeFormat() }), // Use DATE_FORMAT for timestamp
-      format.printf(({ level, message, timestamp }) => {
+      format.colorize(), // Enable color formatting
+      format.timestamp({ format: () => getTimeFormat() }),
+      format.metadata(),
+      format.printf(({ level, message, timestamp, metadata }) => {
         try {
-          const defaultMetaData: MessageMetaData = {
-            isMod: false, // Default for isMod
-            isBroadcaster: false, // Default for isBroadcaster
-            isStaff: false, // Default for isStaff
-            isVip: false, // Default for isVip
-            isParty: false, // Default for isParty
-            isDeputy: false, // Default for isDeputy
-            isEntitled: false, // Default for isEntitled
-            isPermitted: false, // Default for isPermitted
-            channelId: "", // Empty string for IDs
-            userId: "", // Empty string for user ID
-          };
-          const actualMetadata = metadata || defaultMetaData;
-          const hasRole = (role: keyof MessageMetaData): boolean =>
-            !!actualMetadata[role];
-
-          // Determine role color if applicable
-          let formattedMessage = `${timestamp} [CHAT ${level}]: ${message}`;
-
-          if (hasRole("isBroadcaster")) {
-            formattedMessage = colors.broadcaster(formattedMessage);
-          } else if (hasRole("isStaff")) {
-            formattedMessage = colors.staff(formattedMessage);
-          } else if (hasRole("isMod")) {
-            formattedMessage = colors.moderator(formattedMessage);
-
-            // } else if (message.split(" ").includes("@woooordbot")) {
-            //   formattedMessage = colors.self(formattedMessage);
-            // }
+          const metadataParts: string[] = [];
+          let baseColorInstance: ChalkInstance = getChannelColor(channel);
+          // let baseColorInstance: ChalkInstance = getRoleBasedColor(metadata, getChannelColor(channel));
+          if (metadata?.userId === botId) {
+            metadataParts.push("self");
+            baseColorInstance =
+              roleToRoleColor.get("self") ?? baseColorInstance;
+          } else if (metadata?.isBroadcaster) {
+            metadataParts.push("broadcaster");
+            baseColorInstance =
+              roleToRoleColor.get("broadcaster") ?? baseColorInstance;
+          } else if (metadata?.isMod) {
+            metadataParts.push(`Mod`);
+            baseColorInstance =
+              roleToRoleColor.get("moderator") ?? baseColorInstance;
+          } else if (metadata?.isVip) {
+            metadataParts.push(`VIP`);
+            baseColorInstance = roleToRoleColor.get("vip") ?? baseColorInstance;
+          } else if (metadata?.isSubscriber) {
+            metadataParts.push("subscriber");
+            baseColorInstance =
+              roleToRoleColor.get("subscriber") ?? baseColorInstance;
+          } else {
+            metadataParts.push("pleb");
+            baseColorInstance = channelColor ?? white;
           }
 
-          // Check if the channel has permissions for color formatting
+          const metadataString: string =
+            metadataParts.length > 0 ? `[${metadataParts.join(" | ")}]` : "";
+          let baseMessage: string = `${metadata.timestamp} ${metadataString} [CHAT ${level}]: ${message}`;
+          let formattedMessage = baseColorInstance(baseMessage);
 
-          // console.log(channel + "line 70");
-          // console.log(colors[channel] + "line 71")
-          const colorInstance = getColor(channelConfig.logColor);
-          // const channelColor = colors[channelConfig.logColor] || colors.defaultColor;
-          // console.log(channelColor + "line 73");
-          // formattedMessage = channelColor(formattedMessage); // Apply channel color after role
-          formattedMessage = colorInstance(formattedMessage);
-          // const logColor = channelConfig.logColor;
-          // if (colors[logColor]) {
-          //   formattedMessage = colors[logColor](formattedMessage);
-          // }
-
-          // Return the final formatted message
           return formattedMessage;
         } catch (error) {
-          // Log the error and return a fallback message
           console.error("Error formatting chat message:", error);
           return `${timestamp} [CHAT ${level}]: [ERROR] ${message}`;
         }
@@ -102,7 +133,7 @@ const createChatLogger = async (
       new transports.DailyRotateFile({
         filename: `${channel}-chat-%DATE%.log`,
         dirname: `./Logs/${channel}/`,
-        // json: true,
+        json: false,
         datePattern: "YYYY-MM-DD",
         zippedArchive: true,
         maxSize: "20m",
@@ -111,18 +142,12 @@ const createChatLogger = async (
           format.timestamp({ format: () => getTimeFormat() }), // Use DATE_FORMAT for timestamp
           format.printf(({ level, message, timestamp }) =>
             stripAnsi(`${timestamp} [CHAT ${level}]: ${message}`)
-          ) // No color formatting here
-          //   ),
-          // }),
-          // new transports.File({
-          //   filename: "chat.log",
-          //   format: format.printf(({ level, message, timestamp }) =>
-          //     stripAnsi(`${timestamp} [CHAT ${level}]: ${message}`)
-        ), // No color formatting here
+          )
+        ),
       }),
     ],
   });
-  channelLogger.set(channel, logger);
+  channelLoggersMap.set(channel, logger);
   return logger;
 };
 // HTTP Logger
@@ -130,7 +155,7 @@ const createChatLogger = async (
  * Logger for HTTP requests
  * @type {Logger}
  */
-const httpLogger: Logger = createLogger({
+const httpRequestLogger: Logger = createLogger({
   level: "info",
   format: format.combine(
     format.timestamp({ format: () => getTimeFormat() }), // Use DATE_FORMAT for timestamp
@@ -145,27 +170,65 @@ const httpLogger: Logger = createLogger({
   ],
 });
 
+function getChannelColor(channelName: string): ChalkInstance {
+  const hexColor = channelColors[channelName];
+  return hexColor ? chalk.hex(hexColor) : chalk.white; // Default to white if no color is set
+}
+
+// function channelShouldUseSpecialColor(channel: string): boolean {
+//   return channels.some((channelEntry) => channelEntry.channelName === channel);
+// }
+
 // Function to log chat messages
 /**
  * Logs a chat message
  * @param {string} channel - The name of the chat channel
  * @param {string} user - The user sending the message
  * @param {string} text - The message text
+ * @param {object} msg
  * @param {object} metadata - Additional metadata (if any)
+ * @typedef {metadata} metadata
  */
-const logChatMessage = async (
+let logChannelMessage = async (
   channel: string,
   user: string,
   text: string,
-  msg: ChatMessage,
-  metadata?: MessageMetaData
-  // msg?: ChatMessage
+  msg: ChatMessage
 ): Promise<void> => {
-  // console.warn(`logChatMessage called for ${channel}: ${user}: ${text}` + " line 155 of logger.ts");
-  const logger = await createChatLogger(channel, metadata, msg); // Create logger for each channel
-  // console.warn(`Logger created for channel: ${channel}` + " line 157 of logger.ts");
-  const message: string = `${channel}: ${user}: ${text}`;
-  logger.info(message); // Log the message using the channel-specific logger
+  let {
+    isMod,
+    isSubscriber,
+    isVip,
+    isBroadcaster,
+    userId,
+    displayName,
+    color,
+  } = msg.userInfo;
+
+  // if (color) {
+  //   await updateChannelColor(channel, user, color, userId, msg);
+  // }
+
+  let metadata: metadata = {
+    channel: channel,
+    isMod: isMod,
+    isSubscriber: isSubscriber,
+    isVip: isVip,
+    isBroadcaster: isBroadcaster,
+    userId: userId,
+    userName: displayName,
+    messageId: msg.id,
+    messageContent: text, // You can extract additional info like type, badges, etc.
+    timestamp: msg.date,
+    emotes: msg.userInfo.badgeInfo, // Array of emotes used in the message
+    badges: msg.userInfo.badges,
+    color: color, // Badges can include things like VIP, mod, etc.
+  };
+  // console.warn(`logChannelMessagecalled for ${channel}: ${user}: ${text}` + " line 155 of logger.ts");
+  let channelLoggerInstance = await initializeChannelLogger(channel, user, msg); // Create logger for each channel
+
+  let logEntry: string = `${channel}: ${user}: ${text}`;
+  channelLoggerInstance.info(logEntry, metadata); // Log the message using the channel-specific logger
 };
 
 // Function to log HTTP requests
@@ -173,8 +236,26 @@ const logChatMessage = async (
  * Logs an HTTP message
  * @param {string} message - The HTTP message to log
  */
-export const logHttpMessage = (message: string): void => {
-  httpLogger.info(message);
+export const logHttpRequest = (message: string): void => {
+  httpRequestLogger.info(message);
 };
+// Helper function to determine baseColorInstance based on roles
 
-export { httpLogger, logChatMessage };
+// Use this helper in the logging function
+// function getRoleBasedColor(metadata: any, defaultColor: ChalkInstance): ChalkInstance {
+//   if (metadata.isBroadcaster) {
+//     return roleToRoleColor.get('broadcaster') || defaultColor;
+//   }
+//   if (metadata.isMod) {
+//     return roleToRoleColor.get('moderator') || defaultColor;
+//   }
+//   if (metadata.isVip) {
+//     return roleToRoleColor.get('vip') || defaultColor;
+//   }
+//   if (metadata.isSubscriber) {
+//     return roleToRoleColor.get('subscriber') || defaultColor;
+//   }
+//   return roleToRoleColor.get('pleb') || defaultColor; // Default color for non-subscribers
+// }
+
+export { httpRequestLogger, logChannelMessage };

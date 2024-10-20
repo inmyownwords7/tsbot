@@ -1,4 +1,9 @@
 import path from "path";
+import chalk, { ChalkInstance } from "chalk";
+import { roleToRoleColor } from "../modules/logger.js";
+import { channelsMap } from "./async config.js";
+
+// let baseMessage: string = `${metadata.timestamp} ${metadataString} [CHAT ${level}]: ${message}`;
 
 function isCommand(
   commands: string | string[],
@@ -98,13 +103,12 @@ function botUptime() {
   const formattedUptime = formatUptime(botTime);
   // Regex is required below because the general font color is blue.
   // eslint-disable-next-line no-control-regex
-  return formattedUptime.replaceAll(/\[3[^ ]m/g, '');
+  return formattedUptime.replaceAll(/\[3[^ ]m/g, "");
 }
 
 setInterval(() => {
   botUptime();
 }, 60000);
-
 
 // call systemHandler here to restart bot in case of crash or disconnect.
 // setInterval(() => {
@@ -217,4 +221,64 @@ setInterval(() => {
 // if (toggle) {
 //   schedulePeriodicCheck();
 // }
-export { absolutePath, searchPattern, modCommand, deputyCommand, isCommand, formatUptime };
+function setColor(
+  color: string | undefined | null,
+  channel: string
+): string | undefined | null {
+  let oldColor: string | undefined | null = channelsMap.get(channel)?.logColor;
+  oldColor = color;
+  return oldColor;
+}
+
+// Helper function to determine baseColorInstance based on roles
+function getRoleBasedColor(metadata: metadata): ChalkInstance {
+  if (metadata?.isMod) return roleToRoleColor.get("moderator") ?? chalk.white;
+  if (metadata?.isVip) return roleToRoleColor.get("vip") ?? chalk.white;
+  if (metadata?.isSubscriber)
+    return roleToRoleColor.get("subscriber") ?? chalk.white;
+  return chalk.white; // Default to white
+}
+
+function jsonReplacer(key: string, value: unknown): unknown {
+  if (value instanceof Map) {
+    return {
+      dataType: "Map",
+      value: Array.from(value.entries()),
+    };
+  }
+  return value;
+}
+
+// JSON reviver for deserialization
+/**
+ * Description placeholder
+ * @event date 1:09:20 pm
+ *
+ * @param {string} key
+ * @param {*} value
+ * @returns {*}
+ */
+function jsonReviver(key: string, value: unknown): unknown {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    (value as { dataType?: string }).dataType === "Map"
+  ) {
+    return new Map((value as { value: [string, unknown][] }).value);
+  }
+  return value;
+}
+
+// Use this helper in the logging function
+// const formattedMessage = getRoleBasedColor(metadata)(baseMessage);
+export {
+  absolutePath,
+  searchPattern,
+  modCommand,
+  deputyCommand,
+  isCommand,
+  formatUptime,
+  setColor,
+  jsonReplacer,
+  jsonReviver
+};

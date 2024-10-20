@@ -21,12 +21,13 @@ const colors: Record<string, ChalkInstance> = {
   perkz_lol: chalk.yellow,
   moderator: chalk.greenBright,
   deputy: chalk.yellowBright,
-  admin: chalk.redBright,
-  broadcaster: chalk.blueBright,
+  subscriber: chalk.redBright,
+  vip: chalk.blueBright,
   defaultColor: chalk.cyan,
   staff: chalk.magenta,
   self: getRGB(55, 90, 55),
 };
+
 
 const permissions: Record<string, ChalkInstance> = {
   moderator: chalk.greenBright,
@@ -41,7 +42,4 @@ function getColor(logColor: string): ChalkInstance {
   return colorMap[logColor as LogColor] || chalk.cyan; // Default to cyan if logColor is invalid
 }
 
-// export function defaultColor(arg0: string): any {
-//   throw new Error("Function not implemented.");
-// }
 export {colors, getColor, permissions}

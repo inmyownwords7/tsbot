@@ -11,17 +11,21 @@ import {
   // logChatMessage,
 } from "./index.js";
 /**@this Maps cannot be used for global exports*/
-import { channelsMap } from "./utils/async config.js";
+import {
+  channelsMap,
+  loadChatUserData,
+  saveChatMessageData,
+} from "./utils/async config.js";
 import { authProvider, api } from "./modules/auth.js";
 import { colors } from "./formatting/chalk.js";
-import { logChatMessage } from "./modules/logger.js";
+import { logChannelMessage } from "./modules/logger.js";
 import {
   ChatAnnouncementInfo,
   ChatSubGiftInfo,
   ClearChat,
   ClearMsg,
 } from "@twurple/chat";
-import { isCommand } from "./utils/helpers.js";
+import { isCommand, setColor } from "./utils/helpers.js";
 import { botId, getDynamicDate } from "./formatting/constants.js";
 import {
   HelixBanUserRequest,
@@ -29,7 +33,14 @@ import {
   HelixBanUser,
   HelixUser,
   UserNameResolvable,
+  extractUserName,
+  HelixChatUserColor,
+  HelixChannelApi,
+  HelixChatApi,
+  extractUserId,
 } from "@twurple/api";
+import { getEventMessages } from "./formatting/loadJSON.js";
+import registerChatClientEvents from "./modules/events.js";
 // import { getLocalizedMessages } from "./formatting/loadJSON.js";
 
 // **@chatClient declaration */
@@ -55,7 +66,7 @@ let activeUserGroups: string[] = ["woooordbot"];
  *}
  * @type {string[]}
  */
-let activeUserGroupsIds: string[] = ["439212677", "132881296"];
+let activeUserGroupsIds: string[] = ["439212677", "132881296", "65538724"];
 // await extractIdsFromUser(activeUserGroups);
 
 /**
@@ -79,6 +90,8 @@ let activeUserGroupsIds: string[] = ["439212677", "132881296"];
  */
 async function bot(): Promise<void> {
   try {
+    await loadChatUserData();
+    registerChatClientEvents(chatClient)
     chatClient.connect(); // Wait for the connection to succeed
     console.log("Connected to Twitch chat");
   } catch (err) {
@@ -86,42 +99,61 @@ async function bot(): Promise<void> {
     return;
   }
 
-  chatClient.onMessage(async (channel, user, text, msg) => {
-    const { isFounder, isVip, isMod, userId } = msg.userInfo;
-    // logChatMessage(channel, user, text, msg);
-    console.log(`${user}: ${msg.userInfo.userId}`);
-    const messageMetaData: MessageMetaData = {
-      isMod: isMod || false,
-      isStaff: isMod || isFounder || false,
-      isVip: isVip || false,
-      isParty: false, // Define this according to your logic
-      isDeputy: false, // Define this according to your logic
-      userId: userId,
-    };
-    await timeoutHandler(
-      channel,
-      user,
-      text,
-      msg,
-      { duration: 600, reason: "test", user: user },
-      messageMetaData
-    );
-    if (messageMetaData.isMod && text === "!timeout") {
-      // banUser(channel, { duration: 600, reason: "test", user: userId });
-      // console.log(`${user} is a moderator`);
-    }
-  });
+//   // chatClient.onMessage(async (channel, user, text, msg) => {
+//   //   let {
+//   //     isFounder,
+//   //     isVip,
+//   //     isMod,
+//   //     userId,
+//   //     isSubscriber,
+//   //     isBroadcaster,
+//   //     color,
+//   //   } = msg.userInfo;
+//   //   let { channelId } = msg;
+//   //   logChannelMessage(channel, user, text, msg);
 
-  const eventHandlers = [
-    subEvents,
-    connectionEvents,
-    channelEvents,
-    moderatorEvent,
-  ];
+//   //   const messageMetaData: userData = {
+//   //     isFounder: isFounder || false,
+//   //     channelId: channelId || undefined,
+//   //     isMod: isMod || false,
+//   //     isVip: isVip || false,
+//   //     isBroadcaster: isBroadcaster || false,
+//   //     isSubscriber: isSubscriber || false,
+//   //     userId: userId || undefined,
+//   //     userName: user,
+//   //     color: color || undefined,
+//   //     isDeputy: activeUserGroupsIds.includes(userId),
+//   //   };
 
-  for (const handler of eventHandlers) {
-    await handler();
-  }
+//   //   if (messageMetaData.isDeputy) {
+//   //     console.log(`${user} is a deputy`);
+//   //   }
+//   //   await timeoutHandler(
+//   //     channel,
+//   //     user,
+//   //     text,
+//   //     msg,
+//   //     { duration: 600, reason: "test", user: user },
+//   //     messageMetaData
+//   //   );
+//   //   if (messageMetaData.isMod && text === "!timeout") {
+//   //     // banUser(channel, { duration: 600, reason: "test", user: userId });
+//   //     // console.log(`${user} is a moderator`);
+//   //   }
+
+//   //   await saveChatMessageData(messageMetaData);
+//   // });
+
+//   const eventHandlers = [
+//     subEvents,
+//     connectionEvents,
+//     channelEvents,
+//     // moderatorEvent,
+//   ];
+
+//   for (const handler of eventHandlers) {
+//     await handler();
+//   }
 }
 /**
  * Description placeholder
@@ -285,42 +317,43 @@ async function connectionEvents(): Promise<void> {
  * @async
  * @returns {*}
  */
-async function moderatorEvent(): Promise<void> {
-  chatClient.onBan((channel: string, user: string, msg: ClearChat) => {
-    // const message = getLocalizedMessages('ban_message', { user, channel });
-    // console.log(message);
-    console.log(`${user} is banned from ${channel}`);
-  });
+// async function moderatorEvent(): Promise<void> {
+ 
+//   chatClient.onBan((channel: string, user: string, msg: ClearChat) => {
+//     // const message = getLocalizedMessages('ban_message', { user, channel });
+//     // console.log(message);
+//     console.log(`${user} is banned from ${channel}`);
+//   });
 
-  chatClient.onMessageRemove(
-    (channel: string, messageId: string, msg: ClearMsg) => {
-      console.log("");
-    }
-  );
+//   chatClient.onMessageRemove(
+//     (channel: string, messageId: string, msg: ClearMsg) => {
+//       console.log("");
+//     }
+//   );
 
-  chatClient.onTimeout(
-    (channel: string, user: string, duration: number, msg: ClearChat) => {
-      console.log(`${channel}: ${user} was timed out for ${duration} seconds`);
-    }
-  );
+//   chatClient.onTimeout(
+//     (channel: string, user: string, duration: number, msg: ClearChat) => {
+//       console.log(`${channel}: ${user} was timed out for ${duration} seconds`);
+//     }
+//   );
 
-  chatClient.onAnnouncement(
-    (
-      channel: string,
-      user: string,
-      announcementInfo: ChatAnnouncementInfo,
-      msg: UserNotice
-    ) => {
-      console.log("");
-    }
-  );
+//   chatClient.onAnnouncement(
+//     (
+//       channel: string,
+//       user: string,
+//       announcementInfo: ChatAnnouncementInfo,
+//       msg: UserNotice
+//     ) => {
+//       console.log("");
+//     }
+//   );
 
-  chatClient.onAction(
-    (channel: string, user: string, text: string, msg: ChatMessage) => {
-      console.log("");
-    }
-  );
-}
+//   chatClient.onAction(
+//     (channel: string, user: string, text: string, msg: ChatMessage) => {
+//       console.log("");
+//     }
+//   );
+// }
 /**
  * Description placeholder
  * @Date 1:50:37 pm
@@ -370,6 +403,7 @@ async function channelEvents(): Promise<void> {
  * @param {*} user
  * @returns {Promise<string | false | undefined | UserIdResolvable>}
  */
+
 async function extractIdFromUser(
   user: string
 ): Promise<string | false | undefined | UserIdResolvable> {
@@ -387,6 +421,61 @@ async function extractIdFromUser(
     }
   } catch (error) {
     console.error(error);
+  }
+}
+
+extractUserFromIds(activeUserGroupsIds);
+/**
+ * Description placeholder
+ * @date 1:13:17 pm
+ *
+ * @async
+ * @param {(string | string[])} userId
+ * @returns {Promise<string | string[] | false>}
+ */
+async function extractUserFromIds(
+  userId: string | string[]
+): Promise<string | string[] | false> {
+  try {
+    if (Array.isArray(userId)) {
+      // Handle case where user is an array of strings (user IDs)
+      const results = await Promise.all(
+        userId.map(async (u) => {
+          u = u.replace("@", "");
+          if (activeUserGroupsIds.includes(u)) {
+            console.log(u)
+            return u;
+          }
+          if (!u || !api) {
+            return false;
+          }
+          const userResult = await api.users.getUserById(u);
+          console.log(userResult)
+          return userResult ? userResult.id : false;
+        })
+      );
+
+      // Filter out any 'false' values from the results
+      console.log(results)
+      return results.filter((result) => result !== false) as string[];
+    } else {
+      // Handle case where user is a single string (user ID)
+      userId = userId.replace("@", "");
+
+      if (activeUserGroupsIds.includes(userId)) {
+        console.log(userId)
+        return userId;
+      }
+      if (!userId || !api) {
+        return false;
+      }
+      const userResult = await api.users.getUserById(userId);
+      console.log(userResult)
+      return userResult ? userResult.id : false;
+    }
+  } catch (error) {
+    console.error(error);
+    return false;
   }
 }
 /**
@@ -408,6 +497,7 @@ async function banUser(
   const twitchChannel: HelixUser | null = await api.users.getUserByName(
     channel
   );
+  
   twitchChannel?.id;
   try {
     // Check if user is valid
@@ -526,4 +616,19 @@ export async function timeoutHandler(
   }
 }
 
+/**
+ * Description placeholder
+ * @date 1:13:17 pm
+ *
+ * @async
+ * @param {(string | UserIdResolvable)} user
+ * @returns {Promise<undefined | string | null>}
+ */
+async function getUserColor(
+  user: string | UserIdResolvable
+): Promise<undefined | string | null> {
+  const color = await api.chat.getColorForUser(user);
+  // console.log("Getting color for:", user);
+  return color;
+}
 export { chatClient, bot, extractIdFromUser };
