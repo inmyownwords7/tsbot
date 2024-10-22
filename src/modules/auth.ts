@@ -39,4 +39,7 @@ initializeAuthProvider()
 await authProvider.addUserForToken(tokenData);
 const api: ApiClient = new ApiClient({ authProvider });
 authProvider.addIntentsToUser(userId, ["chat", "api"]);
+
+const eventSubListener = api.eventSub
+eventSubListener.subscribeToChannelBanEvents
 export { authProvider, api };
