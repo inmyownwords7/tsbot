@@ -126,7 +126,7 @@ let userIds: string[] = [];
  * @type {Map<string, ChannelConfig>}
  */
 let channelsMap: Map<string, ChannelConfig> = new Map();
-let userDataMap: Map<string, userData> = new Map();
+let userDataMap: Map<string, UserData> = new Map();
 /**
  * Description placeholder
  * @event date 1:09:20 pm
