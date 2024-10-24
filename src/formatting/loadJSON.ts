@@ -1,19 +1,6 @@
 import path from "path";
-import { chatClient } from "../bot.js";
-import { MESSAGES, EVENT_PATH } from "./constants.js"; // Path to your messages.json file
 import { promises } from "fs";
-import { ChatMessage } from "@twurple/chat";
-
-// Load the JSON file with localized messages
-// JSON Reviver is used as a 2nd argument of JSON.parse
-
-/**
- * @type {Array<{ channelName: string }>}
- */
-
-/**
- * @type {Map<string, Object>}
- */
+import { MESSAGES, EVENT_PATH } from "./constants.js"; // Path to your messages.json file
 
 /**
  * Localized messages loaded from the JSON file.
@@ -32,16 +19,13 @@ const eventMessages: EventMessages = JSON.parse(
 );
 
 // Set the default locale
-/**
- * @type {string}
- */
-const currentLocale: string = "en";
+const currentLocale = "en";
 
 /**
- * Retrieves a localized message by key and replaces placeholders
- * @param {string} key - The key for the message in the JSON (e.g., 'ban_message')
- * @param {Record<string, string>} replacements - Object with placeholder values (e.g., {user: 'John', channel: 'ChannelName'})
- * @returns {string} - The localized message with placeholders replaced
+ * Retrieves a localized message by key and replaces placeholders.
+ * @param {string} key - The key for the message in the JSON (e.g., 'ban_message').
+ * @param {Record<string, string>} replacements - Object with placeholder values (e.g., {user: 'John', channel: 'ChannelName'}).
+ * @returns {string} - The localized message with placeholders replaced.
  */
 function getLocalizedMessages(
   key: string,
@@ -57,59 +41,64 @@ function getLocalizedMessages(
 }
 
 /**
- * Handles incoming chat messages
- * @type {void}
- */
-const messager: any = chatClient.onMessage(
-  (channel: string, user: string, text: string, msg: ChatMessage) => {
-    // Implement message handling logic here if needed
-  }
-);
-
-/**
- * Retrieves an event message from the loaded event messages
+ * Retrieves an event message from the loaded event messages.
  * @async
- * @param {keyof ModeratorEvent | keyof ConnectionEvents} messageKey - The message key to look up (e.g., 'ban_message').
- * @param {keyof ChannelEvents} categoryKey - The event category (e.g., 'moderatorEvent' or 'connectionEvents').
+ * @param {keyof ChannelEvents} categoryKey - The event category (e.g., 'moderatorEvents' or 'connectionEvents').
+ * @param {keyof ModeratorEvents | keyof SubscriptionEvents | keyof ConnectionEvents | keyof GeneralEvents} messageKey - The message key to look up (e.g., 'ban_message').
  * @param {Record<string, string>} replacements - Object with placeholder values (e.g., {user: 'John', channel: 'ChannelName'}).
  * @returns {Promise<string>} - A formatted message with placeholders replaced.
  */
 async function getEventMessages(
-  messageKey:  keyof ChannelEvents, 
-  categoryKey: keyof ModeratorEvent | keyof ConnectionEvents, 
+  categoryKey: keyof ChannelEvents,
+  messageKey: keyof ModeratorEvents | keyof SubscriptionEvents | keyof ConnectionEvents | keyof GeneralEvents,
   replacements: Record<string, string>
 ): Promise<string> {
-
-  // Retrieve the category (e.g., 'moderatorEvent' or 'connectionEvents')
+  // Retrieve the event category (e.g., 'moderatorEvents', 'subscriptionEvents', etc.)
   const eventCategory = eventMessages[categoryKey];
 
   if (!eventCategory) {
-    throw new Error(`Category ${categoryKey} does not exist in event messages.`);
+    throw new Error(`Category '${categoryKey}' does not exist in event messages.`);
   }
 
-  // Depending on the category, select the appropriate type
-  let message = "";
+  let message: string | undefined;
 
-  // Type narrowing based on the existence of 'moderatorEvent' or 'connectionEvents'
-  if ("moderatorEvent" in eventCategory && eventCategory.moderatorEvent) {
-    // If the category is 'moderatorEvent', use the messageKey from ModeratorEvent
-    message = eventCategory.moderatorEvent[messageKey as keyof ModeratorEvent] ?? "";
-  } else if ("connectionEvents" in eventCategory && eventCategory.connectionEvents) {
-    // If the category is 'connectionEvents', use the messageKey from ConnectionEvents
-    message = eventCategory.connectionEvents[messageKey as keyof ConnectionEvents] ?? "";
+  // Access the specific message within the event category based on messageKey
+  switch (categoryKey) {
+    case "moderatorEvents": {
+      const moderatorEvents = eventCategory.moderatorEvents;
+      message = moderatorEvents[messageKey as keyof ModeratorEvents];
+      break;
+    }
+    case "subscriptionEvents": {
+      const subscriptionEvents = eventCategory.subscriptionEvents;
+      message = subscriptionEvents[messageKey as keyof SubscriptionEvents];
+      break;
+    }
+    case "connectionEvents": {
+      const connectionEvents = eventCategory.connectionEvents;
+      message = connectionEvents[messageKey as keyof ConnectionEvents];
+      break;
+    }
+    case "generalEvents": {
+      const generalEvents = eventCategory.generalEvents;
+      message = generalEvents[messageKey as keyof GeneralEvents];
+      break;
+    }
+    default:
+      throw new Error(`Category '${categoryKey}' is not recognized.`);
   }
-  
+
   if (!message) {
-    throw new Error(`Message key ${messageKey} does not exist in ${categoryKey}.`);
+    throw new Error(`Message key '${messageKey}' does not exist in category '${categoryKey}'.`);
   }
 
   // Replace placeholders in the message with actual values
-  for (const text in replacements) {
-    message = message.replace(`{{${text}}}`, replacements[text]);
+  for (const placeholder in replacements) {
+    message = message.replace(`{{${placeholder}}}`, replacements[placeholder]);
   }
 
   return message;
 }
 
 // Export the functions
-export { getLocalizedMessages, getEventMessages, messager };
+export { getLocalizedMessages, getEventMessages };

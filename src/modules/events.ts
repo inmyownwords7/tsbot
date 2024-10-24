@@ -13,99 +13,347 @@ import {
 
 import { logChannelMessage } from "./logger.js";
 import { channelsMap } from "../utils/async config.js";
-import { getDynamicDate } from "../formatting/constants.js";
-import { colors } from "../formatting/chalk.js";
-import { getEventMessages } from "formatting/loadJSON.js";
+import { getDynamicDate, botId } from "../formatting/constants.js";
+import { getEventMessages } from "../formatting/loadJSON.js";
 import { chatClient } from "../bot.js";
 
 const event = new EventEmitter();
+const metadataParts: string[] = [];
 
 // Handles the 'ban' event
 // Handles the 'message' event
-registerEvent("message", async ({ channel, user, text, msg }: MessageEvent) => {
-  await logChannelMessage(channel, user, text, msg);
-});
+async function eventHandlers(event: EventEmitter): Promise<void> {
+  event.on("message", async ({ channel, user, text, msg }: MessageEvent) => {
+    let { userId, isBroadcaster, isMod, isVip, isSubscriber } = msg.userInfo;
+    const roles = [
+      { role: "self", condition: userId === botId },
+      { role: "broadcaster", condition: isBroadcaster },
+      { role: "moderator", condition: isMod },
+      { role: "vip", condition: isVip },
+      { role: "subscriber", condition: isSubscriber },
+      { role: "pleb", condition: true }, // Default role
+    ];
 
-// Handles the 'ban' event
-registerEvent("ban", async ({ channel, user, msg }: BanEvent) => {
-  // console.log(`${user} is banned from ${channel}`);
-  console.log(
-    await getEventMessages("moderatorEvent", "ban_message", {
+    metadataParts.length = 0;
+    for (const { role, condition } of roles) {
+      if (condition) {
+        metadataParts.push(role);
+        break;
+      }
+    }
+    const roleString = metadataParts.join(", ");
+    const message = await getEventMessages("generalEvents", "message", {
+      channel,
+      role: roleString,
+      user,
+      text,
+    });
+    console.log(message);
+    await logChannelMessage(channel, user, text, msg);
+  });
+
+  // Handles the 'ban' event
+  event.on("ban", async ({ channel, user, msg }: BanEvent) => {
+    const message = await getEventMessages("moderatorEvents", "ban_message", {
+      channel,
+      user,
+    });
+    console.log(message);
+    // console.log(`${user} is banned from ${channel}`);
+  });
+
+  // Handles the 'timeout' event
+  event.on(
+    "timeout",
+    async ({ channel, user, duration, msg }: TimeoutEvent) => {
+      const message = await getEventMessages(
+        "moderatorEvents",
+        "timeout_message",
+        {
+          channel,
+          user,
+          duration: duration.toString(),
+        }
+      );
+      console.log(message);
+    }
+  );
+
+  // Handles the 'messageRemove' event
+  event.on(
+    "messageRemove",
+    async ({ channel, messageId, msg }: MessageRemoveEvent) => {
+      const message = await getEventMessages(
+        "moderatorEvents",
+        "remove_message",
+        {
+          channel,
+          messageId,
+        }
+      );
+      console.log(message);
+    }
+  );
+
+  // Handles the 'announcement' event
+  event.on(
+    "announcement",
+    async ({ channel, user, announcementInfo, msg }: AnnouncementEvent) => {
+      const message = await getEventMessages(
+        "moderatorEvents",
+        "announcement_message",
+        {
+          channel,
+          user,
+          announcement: announcementInfo.toString(),
+        }
+      );
+      console.log(message);
+    }
+  );
+
+  // Handles the 'newSub' event
+  event.on(
+    "newSub",
+    async ({ channel, user, subInfo }: SubscriptionCategory) => {
+      const message = await getEventMessages(
+        "subscriptionEvents",
+        "subscription_message",
+        {
+          channel: channel,
+          user: user,
+          months: subInfo.toString(),
+        }
+      );
+      console.log(message);
+    }
+  );
+
+  event.on("slowmode", async ({ channel, enabled, delay }) => {
+    const message = await getEventMessages(
+      "moderatorEvents",
+      "slow_mode_message",
+      {
+        channel: channel,
+        enabled: enabled,
+        delay: delay.toString(),
+      }
+    );
+    console.log(message);
+  });
+
+  event.on("uniquemode", async ({ channel, enabled }) => {
+    const message = await getEventMessages(
+      "moderatorEvents",
+      "unique_mode_message",
+      {
+        channel,
+        enabled,
+      }
+    );
+    console.log(message);
+  });
+
+  event.on(
+    "onBitsBadgeUpgrade",
+    async ({ channel, user, upgradeInfo, msg }) => {
+      const message = await getEventMessages(
+        "subscriptionEvents",
+        "bits_badge_upgrade_message",
+        {
+          channel: channel,
+          user: user,
+          upgrade: upgradeInfo.toString(),
+          msg: msg,
+        }
+      );
+      console.log(message);
+    }
+  );
+
+  event.on("clear", async ({ channel, msg }) => {
+    const message = await getEventMessages(
+      "moderatorEvents",
+      "chat_clear_message",
+      {
+        channel: channel,
+        msg: msg,
+      }
+    );
+    console.log(message);
+  });
+
+  event.on("noPermission", async ({ channel, text }) => {
+    const message = await getEventMessages(
+      "generalEvents",
+      "no_permission_message",
+      {
+        channel: channel,
+        text: text,
+      }
+    );
+    console.log(message);
+  });
+
+  event.on("raid", async ({ channel, user, raidInfo, msg }) => {
+    const message = await getEventMessages(
+      "subscriptionEvents",
+      "raid_message",
+      {
+        channel: channel,
+        user: user,
+        raid: raidInfo.toString(),
+        msg: msg,
+      }
+    );
+    console.log(message);
+  });
+
+  event.on("raidCancel", async ({ channel, msg }) => {
+    const message = await getEventMessages(
+      "generalEvents",
+      "raid_Cancel_message",
+      {
+        channel: channel,
+        msg: msg,
+      }
+    );
+    console.log(message);
+  });
+
+  event.on("rewardGift", async ({ channel, user, rewardGiftInfo, msg }) => {
+    const message = await getEventMessages(
+      "subscriptionEvents",
+      "reward_gift_message",
+      {
+        channel: channel,
+        user: user,
+        rewardGift: rewardGiftInfo.toString(),
+        msg: msg,
+      }
+    );
+    console.log(message);
+  });
+
+  event.on("ritual", async ({ channel, user, ritualInfo, msg }) => {
+    const message = await getEventMessages("generalEvents", "ritual_message", {
       channel: channel,
       user: user,
-    }),
+      ritual: ritualInfo.toString(),
+      msg: msg,
+    });
+    console.log(message);
+  });
+
+  event.on("whisper", async ({ user, text, msg }) => {
+    const message = await getEventMessages("generalEvents", "whisper_message", {
+      user: user,
+      text: text,
+      msg: msg,
+    });
+    console.log(message);
+  });
+
+  event.on("onTokenFailure", async ({ err }) => {
+    const message = await getEventMessages(
+      "moderatorEvents",
+      "on_token_failure_message",
+      {
+        err: err.toString(),
+      }
+    );
+    console.error(err);
+  });
+
+  event.on("onTokenSuccess", async ({ token }) => {
+    const message = await getEventMessages(
+      "moderatorEvents",
+      "on_token_success_message",
+      {
+        token: token.toString(),
+      }
+    );
+    console.log(message);
+  });
+
+  event.on("onSub", async ({ channel, user, subInfo, msg }) => {
+    const message = await getEventMessages(
+      "subscriptionEvents",
+      "subscription_message",
+      {
+        channel: channel,
+        user: user,
+        subInfo: subInfo.toString(),
+        msg: msg,
+      }
+    );
+    console.log(message);
+  });
+
+  event.on("onSubGift", async ({ channel, user, subGiftInfo, msg }) => {
+    const message = await getEventMessages(
+      "subscriptionEvents",
+      "gift_subscription_message",
+      {
+        channel: channel,
+        user: user,
+        subGiftInfo: subGiftInfo,
+        msg: msg,
+      }
+    );
+    console.log(message);
+  });
+
+  event.on(
+    "onCommunitySub",
+    async ({ channel, user, communitySubInfo, msg }) => {
+      const message = await getEventMessages(
+        "subscriptionEvents",
+        "community_sub_message",
+        {
+          channel: channel,
+          user: user,
+          communitySubInfo: communitySubInfo,
+          msg: msg,
+        }
+      );
+      console.log(message);
+    }
   );
-});
 
-// Handles the 'timeout' event
-registerEvent("timeout", async ({ channel, user, duration, msg }: TimeoutEvent) => {
-  console.log(`${user} was timed out for ${duration} seconds in ${channel}`);
-});
+  event.on(
+    "onCommunitySubGift",
+    async ({ channel, user, communitySubGiftInfo, msg }) => {
+      const message = await getEventMessages(
+        "moderatorEvents",
+        "community_sub_message",
+        {
+          channel: channel,
+          user: user,
+          communitySubGiftInfo: communitySubGiftInfo,
+          msg: msg,
+        }
+      );
+      console.log(message);
+    }
+  );
+  event.on("join", 
+    async ({
+    channel,
+    user
+  }) => {
+    const message = await getEventMessages(
+      "connectionEvents",
+      "join_message",
+      {
+        channel: channel, 
+        user: user
+      }
+    );
+    console.log(message);
+  });
+}
 
-// Handles the 'messageRemove' event
-registerEvent(
-  "messageRemove",
-  async ({ channel, messageId, msg }: MessageRemoveEvent) => {
-    console.log(`Message with ID ${messageId} was removed in ${channel}`);
-  }
-);
-
-// Handles the 'announcement' event
-registerEvent(
-  "announcement",
-  async ({ channel, user, announcementInfo, msg }: AnnouncementEvent) => {
-    console.log(`Announcement from ${user} in ${channel}: ${announcementInfo}`);
-  }
-);
-
-// Handles the 'newSub' event
-registerEvent("newSub", async ({ channel, user, subInfo }: SubEvent) => {
-  console.log(`${user} subscribed to ${channel} for ${subInfo} months.`);
-});
-
-registerEvent("slowmode", async ({}) => {
-
-})
-
-registerEvent("uniquemode", async ({}) => {
-
-})
-
-registerEvent("onBitsBadgeUpgrade", async ({channel, user, upgradeInfo, msg}) => {
-
-})
-
-registerEvent("clear", async ({channel, msg}) => {
-
-})
-
-registerEvent("noPermission", async ({channel, text}) => {
-
-})
-
-registerEvent("raid", async ({channel, user, raidInfo, msg})=> {
-
-})
-
-registerEvent("raidCancel", async ({channel, msg})=> {
-
-})
-
-registerEvent("rewardGift", async ({channel, user, rewardGiftInfo, msg}) => {
-
-})
-
-registerEvent("ritual", async ({channel, user, ritualInfo, msg}) => {
-
-})
-
-registerEvent("whisper", async ({user, text, msg}) => {
-  
-})
-
-registerEvent("onTokenFailure", async ({err}) => {
-console.error(err);
-})
 async function registerChatClientEvents(chatClient: ChatClient) {
   chatClient.onMessage(
     (channel: string, user: string, text: string, msg: ChatMessage) => {
@@ -153,179 +401,134 @@ async function registerChatClientEvents(chatClient: ChatClient) {
     await subEvents(chatClient);
   }
   await channelEvents(chatClient);
+  await eventHandlers(event);
 }
+
+// async function connectionEvents(chatClient: ChatClient): Promise<void> {
+//   chatClient.onJoin((channel: string, user: string): void => {
+//     getEventMessages("connectionEvents", "join_message", {
+//       channel,
+//       user,
+//     }).then((message) => console.log(message));
+//   });
+
+//   chatClient.onDisconnect(() => {
+//     getEventMessages("connectionEvents", "disconnect_message", {}).then(
+//       (message) => console.log(message)
+//     );
+//   });
+
+//   chatClient.onConnect(() => {
+//     getEventMessages("connectionEvents", "connect_message", {}).then(
+//       (message) => console.log(message)
+//     );
+//   });
+
+//   chatClient.onPart((channel: string, user: string) => {
+//     getEventMessages("connectionEvents", "part_message", {
+//       channel,
+//       user,
+//     }).then((message) => console.log(message));
+//   });
+// }
 
 async function connectionEvents(chatClient: ChatClient): Promise<void> {
   chatClient.onJoin((channel: string, user: string): void => {
-    console.log(
-      colors.defaultColor(`${getDynamicDate()}: ${user} has joined ${channel}`)
-    );
+    event.emit("join", {channel, user});
   });
 
-  chatClient.onDisconnect((manually: boolean, reason: Error | undefined) => {
-    console.log("Disconnected to Twitch chat");
+  chatClient.onDisconnect(() => {
+    event.emit("disconnect", {});
   });
 
   chatClient.onConnect(() => {
-    /*
-          @disabled */
-    // console.log("Connected to Twitch");
+    event.emit("connect", {});
   });
 
-  chatClient.onAuthenticationSuccess(() => {});
-
-  chatClient.onAuthenticationFailure((error) => {
-    console.error("Authentication failed:", error);
+  chatClient.onPart((channel: string, user: string) => {
+    event.emit("part", 
+      {channel, user});
   });
+}
+
+async function subEvents(chatClient: ChatClient): Promise<void> {
+  chatClient.onSub(
+    (channel: string, user: string, subInfo: ChatSubInfo, msg: UserNotice) => {
+      event.emit("submode", 
+        {channel, user, subInfo, msg});
+    }
+  );
+
+  chatClient.onResub(
+    (channel: string, user: string, subInfo: ChatSubInfo, msg: UserNotice) => {
+      event.emit("resub", {channel, user, subInfo, msg});
+    }
+  );
+
+  chatClient.onSubGift(
+    (
+      channel: string,
+      user: string,
+      subInfo: ChatSubGiftInfo,
+      msg: UserNotice
+    ) => {
+      event.emit("subgift",  {channel, user, subInfo, msg});
+    }
+  );
+
+  chatClient.onCommunitySub(
+    (
+      channel: string,
+      user: string,
+      subInfo: ChatCommunitySubInfo,
+      msg: UserNotice
+    ) => {
+      event.emit("communitygift",  
+        {channel, user, subInfo, msg});
+    }
+  );
 }
 
 async function channelEvents(chatClient: ChatClient): Promise<void> {
   chatClient.onChatClear((channel: string, msg: ClearChat) => {
-    console.log(`Chat cleared in ${channel}`);
+    event.emit("clear", {channel, msg});
   });
 
   chatClient.onSubsOnly((channel: string, enabled: boolean) => {
-    console.log(
-      `Subs-only mode ${enabled ? "enabled" : "disabled"} in ${channel}`
-    );
+    event.emit("onsubmode", {channel, enabled});
   });
 
   chatClient.onEmoteOnly((channel: string, enabled: boolean) => {
-    console.log(
-      `Emote-only mode ${enabled ? "enabled" : "disabled"} in ${channel}`
-    );
+    event.emit("emotemode", {channel, enabled});
   });
 
   chatClient.onFollowersOnly(
     (channel: string, enabled: boolean, delay?: number | undefined) => {
-      console.log(
-        `Followers-only mode ${
-          enabled ? `enabled with ${delay} min` : "disabled"
-        } in ${channel}`
-      );
+      event.emit("followmode", {channel, enabled, delay});
     }
   );
 
   chatClient.onPart((channel: string, user: string) => {
-    console.log(`${user} has left the ${channel} chat`);
+    event.emit("part", {channel, user});
   });
 
   chatClient.onSlow(
     (channel: string, enabled: boolean, delay?: number | undefined) => {
-      console.log(
-        `Slow mode ${
-          enabled ? `enabled with ${delay} seconds delay` : "disabled"
-        } in ${channel}`
-      );
+      event.emit("slowmode", {channel, enabled, delay});
     }
   );
 
   chatClient.onUniqueChat((channel: string, enabled: boolean) => {
-    console.log(
-      `Unique chat ${enabled ? "enabled" : "disabled"} in ${channel}`
-    );
+    event.emit("uniquemode", {channel, enabled});
   });
 }
 
-// Subscription event handling
-async function subEvents(chatClient: ChatClient): Promise<void> {
-  // Handle new subscriptions
-  const handleNewSubscription = (
-    channel: string,
-    user: string,
-    subInfo: ChatSubInfo,
-    msg: UserNotice
-  ): void => {
-    try {
-      const channelConfig = channelsMap.get(channel);
-      if (channelConfig?.shouldThankSubscription) {
-        chatClient.say(
-          channel,
-          `${user} has just subscribed for ${subInfo.months} months!`
-        );
-        event.emit("newSub", { channel, user, subInfo });
-      }
-    } catch (error) {
-      console.error("Error handling new subscription event:", error);
-    }
-  };
-
-  // Handle resubscriptions
-  const handleResubscription = (
-    channel: string,
-    user: string,
-    subInfo: ChatSubInfo,
-    msg: UserNotice
-  ): void => {
-    try {
-      const channelConfig = channelsMap.get(channel);
-      if (channelConfig?.shouldThankSubscription) {
-        chatClient.say(
-          channel,
-          `Thanks @${user} for resubscribing for ${subInfo.months} months!`
-        );
-        event.emit("resub", { channel, user, subInfo });
-      }
-    } catch (error) {
-      console.error("Error handling resubscription event:", error);
-    }
-  };
-
-  // Handle gifted subscriptions
-  const handleSubGift = (
-    channel: string,
-    user: string,
-    subInfo: ChatSubGiftInfo,
-    msg: UserNotice
-  ): void => {
-    try {
-      const gifter = subInfo.gifter;
-      chatClient.say(
-        channel,
-        `Thanks @${gifter} for gifting a sub to ${subInfo.displayName}!`
-      );
-      event.emit("subgift", { channel, gifter, subInfo });
-    } catch (error) {
-      console.error("Error handling gifted subscription event:", error);
-    }
-  };
-
-  // Handle community gifted subscriptions
-  const handleCommunitySub = (
-    channel: string,
-    user: string,
-    subInfo: ChatCommunitySubInfo,
-    msg: UserNotice
-  ): void => {
-    try {
-      chatClient.say(
-        channel,
-        `${user} has gifted ${subInfo.count} subs to the community!`
-      );
-      event.emit("communitySub", { channel, user, subInfo });
-    } catch (error) {
-      console.error("Error handling community subscription event:", error);
-    }
-  };
-
-  // Set up event handlers for different subscription types
-  chatClient.onSub(handleNewSubscription);
-  chatClient.onResub(handleResubscription);
-  chatClient.onSubGift(handleSubGift);
-  chatClient.onCommunitySub(handleCommunitySub);
-}
-
-async function say(channel: string, callback: () => Promise<string>): Promise<void> {
+async function say(
+  channel: string,
+  callback: () => Promise<string>
+): Promise<void> {
   const message = await callback();
   chatClient.say(channel, message);
 }
-async function registerEvent(eventType: string, handler: (params: any) => void): Promise<void> {
-  event.on(eventType, async (params) => {
-    try {
-      handler(params);
-    } catch (error) {
-      console.error(`Error handling ${eventType} event:`, error);
-    }
-  })
-}
+
 export default registerChatClientEvents;

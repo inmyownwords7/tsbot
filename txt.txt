@@ -1,0 +1,53 @@
+// async function subEvents(chatClient: ChatClient): Promise<void> {
+//   chatClient.onSub(
+//     (channel: string, user: string, subInfo: ChatSubInfo, msg: UserNotice) => {
+//       getEventMessages("subscriptionEvents", "subscription_message", {
+//         channel,
+//         user,
+//         months: subInfo.months.toString(),
+//       }).then((message) => console.log(message));
+//     }
+//   );
+
+//   chatClient.onResub(
+//     (channel: string, user: string, subInfo: ChatSubInfo, msg: UserNotice) => {
+//       getEventMessages("subscriptionEvents", "resub_message", {
+//         channel,
+//         user,
+//         months: subInfo.months.toString(),
+//       }).then((message) => console.log(message));
+//     }
+//   );
+
+//   chatClient.onSubGift(
+//     (
+//       channel: string,
+//       user: string,
+//       subInfo: ChatSubGiftInfo,
+//       msg: UserNotice
+//     ) => {
+//       getEventMessages("subscriptionEvents", "gift_subscription_message", {
+//         channel,
+//         user: user,
+//         gifter: subInfo.displayName,
+//         msg: msg.toString(),
+//       }).then((message) => console.log(message));
+//     }
+//   );
+
+//   chatClient.onCommunitySub(
+//     (
+//       channel: string,
+//       user: string,
+//       subInfo: ChatCommunitySubInfo,
+//       msg: UserNotice
+//     ) => {
+//       getEventMessages("subscriptionEvents", "community_sub_message", {
+//         channel,
+//         user,
+//         count: subInfo.count.toString(),
+//         msg: msg.toString(),
+//       }).then((message) => console.log(message));
+//     }
+//   );
+// }

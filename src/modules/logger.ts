@@ -209,7 +209,7 @@ let logChannelMessage = async (
   //   await updateChannelColor(channel, user, color, userId, msg);
   // }
 
-  let metadata: metadata = {
+  let metadata: Metadata = {
     channel: channel,
     isMod: isMod,
     isSubscriber: isSubscriber,
