@@ -7,7 +7,7 @@
     "**/CVS": true,
     "**/.DS_Store": true,
     "**/Thumbs.db": true,
-    "**/node_modules": true,
+    "**/node_modules": false,
     ".vscode/launch.json": true,
     "dist/src": false,
     "docs": true
