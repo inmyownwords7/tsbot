@@ -41,6 +41,7 @@ import {
 } from "@twurple/api";
 import { getEventMessages } from "./formatting/loadJSON.js";
 import registerChatClientEvents from "./modules/events.js";
+import { promises } from "dns";
 // import { getLocalizedMessages } from "./formatting/loadJSON.js";
 
 // **@chatClient declaration */
@@ -91,7 +92,7 @@ let activeUserGroupsIds: string[] = ["439212677", "132881296", "65538724"];
 async function bot(): Promise<void> {
   try {
     await loadChatUserData();
-    registerChatClientEvents(chatClient)
+    registerChatClientEvents(chatClient);
     chatClient.connect(); // Wait for the connection to succeed
     console.log("Connected to Twitch chat");
   } catch (err) {
@@ -100,4 +101,7 @@ async function bot(): Promise<void> {
   }
 }
 
-export {chatClient, bot}
+export async function join(chatClient: ChatClient): Promise<void> {
+  chatClient.onJoin((channel, user) => {`${user} ${channel}`});
+}
+export { chatClient, bot };

@@ -1,6 +1,7 @@
 import path from "path";
 import { promises } from "fs";
 import { MESSAGES, EVENT_PATH } from "./constants.js"; // Path to your messages.json file
+import { chatClient, join } from "../bot.js";
 
 /**
  * Localized messages loaded from the JSON file.
@@ -50,55 +51,78 @@ function getLocalizedMessages(
  */
 async function getEventMessages(
   categoryKey: keyof ChannelEvents,
-  messageKey: keyof ModeratorEvents | keyof SubscriptionEvents | keyof ConnectionEvents | keyof GeneralEvents,
+  messageKey:
+    | keyof ModeratorEvents
+    | keyof SubscriptionEvents
+    | keyof ConnectionEvents
+    | keyof GeneralEvents,
   replacements: Record<string, string>
 ): Promise<string> {
   // Retrieve the event category (e.g., 'moderatorEvents', 'subscriptionEvents', etc.)
   const eventCategory = eventMessages[categoryKey];
 
   if (!eventCategory) {
-    throw new Error(`Category '${categoryKey}' does not exist in event messages.`);
+    throw new Error(
+      `Category '${categoryKey}' does not exist in event messages.`
+    );
   }
 
   let message: string | undefined;
-
+  if (categoryKey === undefined) {
+    return "false";
+  }
   // Access the specific message within the event category based on messageKey
   switch (categoryKey) {
     case "moderatorEvents": {
       const moderatorEvents = eventCategory.moderatorEvents;
-      message = moderatorEvents[messageKey as keyof ModeratorEvents];
+      if (moderatorEvents && messageKey in moderatorEvents) {
+        message = moderatorEvents[messageKey as keyof ModeratorEvents];
+      } else {
+        message = "Default moderator event message";
+      }
       break;
     }
     case "subscriptionEvents": {
       const subscriptionEvents = eventCategory.subscriptionEvents;
-      message = subscriptionEvents[messageKey as keyof SubscriptionEvents];
+      if (subscriptionEvents && messageKey in subscriptionEvents) {
+        message = subscriptionEvents[messageKey as keyof SubscriptionEvents];
+      } else {
+        message = "Default subscription event message";
+      }
       break;
     }
     case "connectionEvents": {
       const connectionEvents = eventCategory.connectionEvents;
-      message = connectionEvents[messageKey as keyof ConnectionEvents];
+      if (connectionEvents && messageKey in connectionEvents) {
+        message = connectionEvents[messageKey as keyof ConnectionEvents];
+      } else {
+        await join(chatClient) // Fallback join message
+      }
       break;
     }
     case "generalEvents": {
       const generalEvents = eventCategory.generalEvents;
-      message = generalEvents[messageKey as keyof GeneralEvents];
+      if (generalEvents && messageKey in generalEvents) {
+        message = generalEvents[messageKey as keyof GeneralEvents];
+      } else {
+        message = "Default general event message";
+      }
       break;
     }
     default:
       throw new Error(`Category '${categoryKey}' is not recognized.`);
   }
-
+  
   if (!message) {
     throw new Error(`Message key '${messageKey}' does not exist in category '${categoryKey}'.`);
   }
-
+  
   // Replace placeholders in the message with actual values
   for (const placeholder in replacements) {
     message = message.replace(`{{${placeholder}}}`, replacements[placeholder]);
   }
-
+  
   return message;
 }
-
 // Export the functions
 export { getLocalizedMessages, getEventMessages };
