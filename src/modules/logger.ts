@@ -48,7 +48,7 @@ const jsonFormat = format.combine(
   format.json(),
   format.colorize(),
   format.align(),
-  format.printf((info) => `${info.level} ${info.message}`)
+  format.printf((info: { level: string; message: string; }) => `${info.level} ${info.message}`)
 );
 /**
  * Creates a chat logger for a specific channel
@@ -209,7 +209,7 @@ let logChannelMessage = async (
   //   await updateChannelColor(channel, user, color, userId, msg);
   // }
 
-  let metadata: metadata = {
+  let metadata: Metadata = {
     channel: channel,
     isMod: isMod,
     isSubscriber: isSubscriber,

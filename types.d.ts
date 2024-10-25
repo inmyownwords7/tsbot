@@ -172,7 +172,7 @@ declare global {
     timestamp: Date;
     emotes: Map<string, string>;
     badges: Map<string, string>;
-    color: string;
+    color: string | undefined;
   }
 
   // Log color and badge type enums

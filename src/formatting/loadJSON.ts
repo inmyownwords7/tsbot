@@ -60,11 +60,11 @@ function getLocalizedMessages(
  * Handles incoming chat messages
  * @type {void}
  */
-const messager: any = chatClient.onMessage(
-  (channel: string, user: string, text: string, msg: ChatMessage) => {
-    // Implement message handling logic here if needed
-  }
-);
+// const messager: any = chatClient.onMessage(
+//   (channel: string, user: string, text: string, msg: ChatMessage) => {
+//     // Implement message handling logic here if needed
+//   }
+// );
 
 /**
  * Retrieves an event message from the loaded event messages
@@ -112,4 +112,4 @@ async function getEventMessages(
 }
 
 // Export the functions
-export { getLocalizedMessages, getEventMessages, messager };
+export { getLocalizedMessages, getEventMessages };

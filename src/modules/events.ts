@@ -15,7 +15,7 @@ import { logChannelMessage } from "./logger.js";
 import { channelsMap } from "../utils/async config.js";
 import { getDynamicDate } from "../formatting/constants.js";
 import { colors } from "../formatting/chalk.js";
-import { getEventMessages } from "formatting/loadJSON.js";
+import { getEventMessages } from "../formatting/loadJSON.js";
 import { chatClient } from "../bot.js";
 
 const event = new EventEmitter();

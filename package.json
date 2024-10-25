@@ -46,6 +46,7 @@
     "@twurple/eventsub-ws": "^7.1.0",
     "collections": "^5.1.13",
     "module-alias": "^2.2.3",
+    "package.json": "^2.0.1",
     "strip-ansi": "^7.1.0"
   },
   "_moduleAliases": {

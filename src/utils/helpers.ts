@@ -231,7 +231,7 @@ function setColor(
 }
 
 // Helper function to determine baseColorInstance based on roles
-function getRoleBasedColor(metadata: metadata): ChalkInstance {
+function getRoleBasedColor(metadata: Metadata): ChalkInstance {
   if (metadata?.isMod) return roleToRoleColor.get("moderator") ?? chalk.white;
   if (metadata?.isVip) return roleToRoleColor.get("vip") ?? chalk.white;
   if (metadata?.isSubscriber)
