@@ -7,7 +7,7 @@ import {
   channelsMap,
   channelColors,
   updateChannelColor,
-} from "../utils/async config.js";
+} from "../handlers/async config.js";
 import { ChatMessage } from "@twurple/chat";
 import chalk, { ChalkInstance } from "chalk";
 let { red, blue, green, white, greenBright, cyan } = chalk;
@@ -48,7 +48,9 @@ const jsonFormat = format.combine(
   format.json(),
   format.colorize(),
   format.align(),
-  format.printf((info: { level: string; message: string; }) => `${info.level} ${info.message}`)
+  format.printf(
+    (info: { level: string; message: any }) => `${info.level} ${info.message}`
+  )
 );
 /**
  * Creates a chat logger for a specific channel
@@ -186,8 +188,6 @@ function getChannelColor(channelName: string): ChalkInstance {
  * @param {string} user - The user sending the message
  * @param {string} text - The message text
  * @param {object} msg
- * @param {object} metadata - Additional metadata (if any)
- * @typedef {metadata} metadata
  */
 let logChannelMessage = async (
   channel: string,
@@ -204,12 +204,13 @@ let logChannelMessage = async (
     displayName,
     color,
   } = msg.userInfo;
-
+  let { channelId } = msg;
   // if (color) {
   //   await updateChannelColor(channel, user, color, userId, msg);
   // }
 
   let metadata: Metadata = {
+    channelId: channelId,
     channel: channel,
     isMod: isMod,
     isSubscriber: isSubscriber,
@@ -217,12 +218,11 @@ let logChannelMessage = async (
     isBroadcaster: isBroadcaster,
     userId: userId,
     userName: displayName,
-    messageId: msg.id,
-    messageContent: text, // You can extract additional info like type, badges, etc.
-    timestamp: msg.date,
     emotes: msg.userInfo.badgeInfo, // Array of emotes used in the message
     badges: msg.userInfo.badges,
-    color: color, // Badges can include things like VIP, mod, etc.
+    color: color,
+    messages: [],
+    // Badges can include things like VIP, mod, etc.
   };
   // console.warn(`logChannelMessagecalled for ${channel}: ${user}: ${text}` + " line 155 of logger.ts");
   let channelLoggerInstance = await initializeChannelLogger(channel, user, msg); // Create logger for each channel

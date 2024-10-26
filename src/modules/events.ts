@@ -12,17 +12,103 @@ import {
 } from "@twurple/chat";
 
 import { logChannelMessage } from "./logger.js";
-import { channelsMap } from "../utils/async config.js";
+import {
+  channelsMap,
+  saveChatMessageData,
+  userDataMap,
+} from "../handlers/async config.js";
 import { getDynamicDate } from "../formatting/constants.js";
 import { colors } from "../formatting/chalk.js";
 import { getEventMessages } from "../formatting/loadJSON.js";
 import { chatClient } from "../bot.js";
-
+const userMessageHistory: Map<string, Metadata[]> = new Map();
 const event = new EventEmitter();
-
-// Handles the 'ban' event
-// Handles the 'message' event
 registerEvent("message", async ({ channel, user, text, msg }: MessageEvent) => {
+  let {
+    isMod,
+    isSubscriber,
+    isVip,
+    isBroadcaster,
+    isFounder,
+    userId,
+    displayName,
+    color,
+  } = msg.userInfo;
+  let { id, channelId } = msg;
+
+  // Create the metadata for the message
+  let metadata: Metadata = {
+    channelId: channelId || null,
+    channel: channel,
+    isMod: isMod,
+    isSubscriber: isSubscriber,
+    isVip: isVip,
+    isBroadcaster: isBroadcaster,
+    isFounder: isFounder,
+    userId: userId,
+    userName: displayName,
+    emotes: msg.userInfo.badgeInfo, // Array of emotes used in the message
+    badges: msg.userInfo.badges,
+    color: color,
+    messageId: id,
+    messageContent: text,
+    timestamp: new Date(),
+    messages: [], // Current timestamp
+  };
+
+  // Get or create the user data
+  let userData = userDataMap.get(userId);
+  if (!userData) {
+    // Create new user data if it doesn't exist
+    userData = {
+      channelId: channelId || null,
+      userId: userId,
+      isMod: isMod,
+      isVip: isVip,
+      isBroadcaster: isBroadcaster,
+      isSubscriber: isSubscriber,
+      isFounder: isFounder,
+      color: color,
+      userName: displayName.toLowerCase(),
+      messages: [], // Initialize messages array
+    };
+  }
+
+  if (userData.userName.toLowerCase() === "nightbot") {
+    return;
+  }
+
+  // Add the new message to the user's messages array
+  userData.messages.push({
+    messageContent: text,
+    timestamp: Date() || undefined, // Use provided timestamp or current date
+    msgId: id,
+  });
+
+  // Update the user data map with the new message
+  userDataMap.set(userId, userData);
+
+  // Manage the user's message history
+  if (!userMessageHistory.has(userId)) {
+    userMessageHistory.set(userId, []);
+  }
+  userMessageHistory.get(userId)?.push(metadata);
+
+  // Optional: limit the number of messages stored per user
+  const history = userMessageHistory.get(userId);
+  if (history && history.length > 100) {
+    history.shift(); // Remove the oldest message if history exceeds 100 messages
+  }
+
+  // Log the message history
+  console.log(
+    `User ${displayName} (ID: ${userId}) message history:`,
+    userMessageHistory.get(userId)
+  );
+
+  // Save chat message metadata to a file (async)
+  await saveChatMessageData(metadata);
+  // Log the channel message
   await logChannelMessage(channel, user, text, msg);
 });
 
@@ -30,17 +116,20 @@ registerEvent("message", async ({ channel, user, text, msg }: MessageEvent) => {
 registerEvent("ban", async ({ channel, user, msg }: BanEvent) => {
   // console.log(`${user} is banned from ${channel}`);
   console.log(
-    await getEventMessages("moderatorEvent", "ban_message", {
+    await getEventMessages("moderatorEvents", "ban_message", {
       channel: channel,
       user: user,
-    }),
+    })
   );
 });
 
 // Handles the 'timeout' event
-registerEvent("timeout", async ({ channel, user, duration, msg }: TimeoutEvent) => {
-  console.log(`${user} was timed out for ${duration} seconds in ${channel}`);
-});
+registerEvent(
+  "timeout",
+  async ({ channel, user, duration, msg }: TimeoutEvent) => {
+    console.log(`${user} was timed out for ${duration} seconds in ${channel}`);
+  }
+);
 
 // Handles the 'messageRemove' event
 registerEvent(
@@ -54,58 +143,90 @@ registerEvent(
 registerEvent(
   "announcement",
   async ({ channel, user, announcementInfo, msg }: AnnouncementEvent) => {
-    console.log(`Announcement from ${user} in ${channel}: ${announcementInfo}`);
+    // If you want to log the entire object as JSON
+    console.log(
+      `Announcement from ${user} in ${channel}: ${JSON.stringify(
+        announcementInfo
+      )}`
+    );
+
+    // Or log specific properties (assuming `announcementInfo` has 'message' and 'type' properties)
+    if (typeof announcementInfo === "object" && announcementInfo !== null) {
+      console.log(
+        `Announcement from ${user} in ${channel}: ${announcementInfo.color} 'No message provided'}`
+      );
+    } else {
+      console.log(
+        `Announcement from ${user} in ${channel}: ${announcementInfo}`
+      );
+    }
   }
 );
 
 // Handles the 'newSub' event
-registerEvent("newSub", async ({ channel, user, subInfo }: SubEvent) => {
-  console.log(`${user} subscribed to ${channel} for ${subInfo} months.`);
+registerEvent(
+  "newSub",
+  async ({ channel, user, subInfo }: SubscriptionCategory) => {
+    console.log(`${user} subscribed to ${channel} for ${subInfo} months.`);
+  }
+);
+
+registerEvent("slowmode", async ({ channel, duration, msg }) => {
+  console.log(`Slow mode enabled in ${channel} for ${duration} seconds.`);
 });
 
-registerEvent("slowmode", async ({}) => {
+registerEvent("uniquemode", async ({ channel, msg }) => {
+  console.log(`Unique mode activated in ${channel}.`);
+});
 
-})
+registerEvent(
+  "onBitsBadgeUpgrade",
+  async ({ channel, user, upgradeInfo, msg }) => {
+    console.log(`${user} has upgraded their bits badge in ${channel}.`);
+  }
+);
+// Chat is cleared
+registerEvent("clear", async ({ channel, msg }) => {
+  console.log(`Chat in ${channel} has been cleared.`);
+});
 
-registerEvent("uniquemode", async ({}) => {
+registerEvent("noPermission", async ({ channel, text }) => {
+  console.log(`Permission denied for action in ${channel}: ${text}`);
+});
 
-})
+registerEvent("raid", async ({ channel, user, raidInfo, msg }) => {
+  console.log(
+    `Incoming raid from ${user} with ${raidInfo.viewerCount} viewers!`
+  );
+});
 
-registerEvent("onBitsBadgeUpgrade", async ({channel, user, upgradeInfo, msg}) => {
+// A raid is cancelled
+registerEvent("raidCancel", async ({ channel, msg }) => {
+  console.log(`The raid in ${channel} has been canceled.`);
+});
 
-})
+registerEvent("rewardGift", async ({ channel, user, rewardGiftInfo, msg }) => {
+  console.log(`${user} has gifted a reward in ${channel}!`);
+});
 
-registerEvent("clear", async ({channel, msg}) => {
+// Ritual event (e.g., sub rituals in Twitch chat)
+registerEvent("ritual", async ({ channel, user, ritualInfo, msg }) => {
+  console.log(
+    `Ritual event triggered in ${channel} by ${user}. Ritual info:`,
+    ritualInfo
+  );
+});
 
-})
+// Whisper message received
+registerEvent("whisper", async ({ user, text, msg }) => {
+  console.log(`Whisper received from ${user}: ${text}`);
+});
 
-registerEvent("noPermission", async ({channel, text}) => {
+// Token failure event (e.g., OAuth token issues)
+registerEvent("onTokenFailure", async ({ err }) => {
+  console.error(`Token failure encountered:`, err);
+});
 
-})
-
-registerEvent("raid", async ({channel, user, raidInfo, msg})=> {
-
-})
-
-registerEvent("raidCancel", async ({channel, msg})=> {
-
-})
-
-registerEvent("rewardGift", async ({channel, user, rewardGiftInfo, msg}) => {
-
-})
-
-registerEvent("ritual", async ({channel, user, ritualInfo, msg}) => {
-
-})
-
-registerEvent("whisper", async ({user, text, msg}) => {
-  
-})
-
-registerEvent("onTokenFailure", async ({err}) => {
-console.error(err);
-})
 async function registerChatClientEvents(chatClient: ChatClient) {
   chatClient.onMessage(
     (channel: string, user: string, text: string, msg: ChatMessage) => {
@@ -315,17 +436,23 @@ async function subEvents(chatClient: ChatClient): Promise<void> {
   chatClient.onCommunitySub(handleCommunitySub);
 }
 
-async function say(channel: string, callback: () => Promise<string>): Promise<void> {
+async function say(
+  channel: string,
+  callback: () => Promise<string>
+): Promise<void> {
   const message = await callback();
   chatClient.say(channel, message);
 }
-async function registerEvent(eventType: string, handler: (params: any) => void): Promise<void> {
+async function registerEvent(
+  eventType: string,
+  handler: (params: any) => void
+): Promise<void> {
   event.on(eventType, async (params) => {
     try {
       handler(params);
     } catch (error) {
       console.error(`Error handling ${eventType} event:`, error);
     }
-  })
+  });
 }
 export default registerChatClientEvents;

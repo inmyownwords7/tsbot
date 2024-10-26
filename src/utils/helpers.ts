@@ -1,7 +1,7 @@
 import path from "path";
 import chalk, { ChalkInstance } from "chalk";
 import { roleToRoleColor } from "../modules/logger.js";
-import { channelsMap } from "./async config.js";
+import { channelsMap } from "../handlers/async config.js";
 
 // let baseMessage: string = `${metadata.timestamp} ${metadataString} [CHAT ${level}]: ${message}`;
 
@@ -280,5 +280,5 @@ export {
   formatUptime,
   setColor,
   jsonReplacer,
-  jsonReviver
+  jsonReviver,
 };

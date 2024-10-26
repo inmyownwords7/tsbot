@@ -21,7 +21,7 @@ import {
 } from "@twurple/chat";
 // import { api } from "./modules/auth.js";
 import * as authProvider from "./modules/auth.js";
-import * as channelsMap from "./utils/async config.js";
+import * as channelsMap from "./handlers/async config.js";
 import * as colors from "./formatting/chalk.js";
 import { DATE_FORMAT } from "./formatting/constants.js";
 import * as logger from "./modules/logger.js";

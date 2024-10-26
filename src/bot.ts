@@ -15,7 +15,7 @@ import {
   channelsMap,
   loadChatUserData,
   saveChatMessageData,
-} from "./utils/async config.js";
+} from "./handlers/async config.js";
 import { authProvider, api } from "./modules/auth.js";
 import { colors } from "./formatting/chalk.js";
 import { logChannelMessage } from "./modules/logger.js";
@@ -91,7 +91,7 @@ let activeUserGroupsIds: string[] = ["439212677", "132881296", "65538724"];
 async function bot(): Promise<void> {
   try {
     await loadChatUserData();
-    registerChatClientEvents(chatClient)
+    registerChatClientEvents(chatClient);
     chatClient.connect(); // Wait for the connection to succeed
     console.log("Connected to Twitch chat");
   } catch (err) {
@@ -100,4 +100,4 @@ async function bot(): Promise<void> {
   }
 }
 
-export {chatClient, bot}
+export { chatClient, bot };

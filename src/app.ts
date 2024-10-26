@@ -7,7 +7,7 @@ import { logHttpRequest } from "./modules/logger.js";
 
 dotenv.config();
 const app = express();
-const port: number = Number(process.env.PORT) || 29800;
+const port: number = Number(process.env.PORT) || 3000;
 
 app.use(
   morgan("combined", {

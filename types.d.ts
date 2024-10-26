@@ -1,4 +1,3 @@
-// types.d.ts
 import { ChalkInstance } from "chalk";
 import {
   ChatMessage,
@@ -11,6 +10,30 @@ import { ClearChat, ClearMsg, UserNotice } from "@twurple/chat";
 import { UserIdResolvable, AuthProvider } from "@twurple/api";
 
 declare global {
+  // Log color and badge type enums
+  type LogColor = "red" | "blue" | "green" | "yellow" | "magenta" | "cyan";
+  type BadgeType = "moderator" | "deputy" | "vip" | "pleb" | "subscriber";
+  // Subscription Types
+  type SubscriptionType =
+    | "new"
+    | "extend"
+    | "resub"
+    | "community"
+    | "communityPayForward"
+    | "subgift";
+
+  // Color keys for different roles or events
+  type ColorKeys =
+    | "tfblade"
+    | "iwdominate"
+    | "akanemko"
+    | "perkz_lol"
+    | "magenta"
+    | "cyan"
+    | "white"
+    | "gray"
+    | "defaultColor";
+
   // MetaData Interface for chat message details
   interface MessageMetaData {
     channelId?: string;
@@ -23,20 +46,13 @@ declare global {
     isEntitled?: boolean;
     isPermitted?: boolean;
     isSubscriber?: boolean;
+    isFounder?: boolean;
     userId?: string;
+    color?: string | undefined;
     userName: string;
-    // emotes and badges can be Maps if required
-    // emotes: Map<string, string>;
-    // badges: Map<string, string>;
   }
 
-  // ChatClient Interface
-  interface ChatClient {
-    channel: string;
-    user: string;
-    text: string;
-    msg: ChatMessage;
-  }
+  // Remove ChatClient Interface to avoid conflict with Twurple's ChatClient
 
   // Event Interfaces for Twitch events
   interface MessageEvent {
@@ -72,7 +88,7 @@ declare global {
     msg: UserNotice;
   }
 
-  interface SubEvent {
+  interface SubscriptionCategory {
     channel: string;
     user: string;
     subInfo: ChatSubInfo | ChatSubGiftInfo | ChatCommunitySubInfo;
@@ -80,7 +96,8 @@ declare global {
 
   // User Data Interface for user information in events
   interface UserData {
-    userId: string;
+    channelId?: string | null;
+    userId: string | undefined;
     isMod: boolean;
     isVip: boolean;
     isBroadcaster: boolean;
@@ -90,30 +107,20 @@ declare global {
     isParty?: boolean;
     isDeputy?: boolean;
     isFounder?: boolean;
-    channelId?: string | UserIdResolvable | null;
     color?: string;
+    messages:
+    Array<{
+      messageContent?: string;
+      timestamp?: string;
+      msgId?: string;
+    }>
   }
 
-  // Subscription Types
-  type SubscriptionType =
-    | "new"
-    | "extend"
-    | "resub"
-    | "community"
-    | "communityPayForward"
-    | "subgift";
-
-  // Color keys for different roles or events
-  type ColorKeys =
-    | "tfblade"
-    | "iwdominate"
-    | "akanemko"
-    | "perkz_lol"
-    | "magenta"
-    | "cyan"
-    | "white"
-    | "gray"
-    | "defaultColor";
+  interface MessageData {
+    messageContent: string;
+    timestamp: Date;
+    messageId: string;
+  }
 
   // ChatConfig Interface for chat configuration
   interface ChatConfig {
@@ -158,47 +165,102 @@ declare global {
     isKoreanEnabled: boolean;
   }
 
+  interface ChannelConfig {
+    isForeignEnabled: boolean;
+    shouldThankSubscription: boolean;
+    toggleLog: boolean;
+    logColor: string;
+    isFlamingEnabled: boolean;
+    toggleTempo: boolean;
+    banCount: number;
+    messageDeletedCounter: number;
+    timeCounter: number;
+    subCounter: number;
+    accountUserAge: boolean;
+    isKoreanEnabled: boolean;
+  }
+  
+  interface UserData {
+    channelId: string | null;
+    userId: string;
+    isMod: boolean;
+    isVip: boolean;
+    isBroadcaster: boolean;
+    isSubscriber: boolean;
+    isFounder: boolean;
+    color: string | undefined;
+    userName: string;
+    messages: Array<ChatMessage>;
+  }
   // Metadata Interface for detailed message metadata
   interface Metadata {
+    channelId: string | null;
     channel: string;
     isMod: boolean;
     isSubscriber: boolean;
     isVip: boolean;
     isBroadcaster: boolean;
+    isFounder?: boolean;
     userId: string;
     userName: string;
-    messageId: string;
-    messageContent: string;
-    timestamp: Date;
     emotes: Map<string, string>;
     badges: Map<string, string>;
     color: string | undefined;
+    messages: Array<{
+      messageId?: string;
+      messageContent?: string;
+      timestamp?: Date;
+    }>
+    messageId?: string;
+    messageContent?: string;
+    timestamp?: Date;
   }
 
-  // Log color and badge type enums
-  type LogColor = "red" | "blue" | "green" | "yellow" | "magenta" | "cyan";
-  type BadgeType = "moderator" | "deputy" | "vip" | "pleb" | "subscriber";
+  interface SubscriptionEvents {
+    subscription_message: string;
+    resub_message: string;
+    gift_subscription_message: string;
+    community_sub_message: string;
+    reward_gift_message: string;
+    bits_badge_upgrade_message: string
+  }
 
-  interface ModeratorEvent {
+  interface ModeratorEvents {
     ban_message: string;
-    message_remove: string;
     timeout_message: string;
     announcement_message: string;
-    action_message: string;
+    remove_message: string;
+    subs_only_mode_message: string;
+    chat_clear_message: string;
+    slow_mode_message: string;
+    emote_only_mode_message: string;
+    unique_mode_message: string;
+    on_token_success_message: string;
+    on_token_failure_message: string;
   }
 
   interface ConnectionEvents {
-    connect: string;
+    connect_message: string;
+    disconnect_message: string;
+    join_message: string;
+    part_message: string;
   }
 
   interface ChannelEvents {
-    moderatorEvent: ModeratorEvent;
+    moderatorEvents: ModeratorEvents;
     generalEvents: GeneralEvents;
-    connectionEvents?: ConnectionEvents; // Optional, as some channels might not have connection events
+    connectionEvents: ConnectionEvents;
+    subscriptionEvents: SubscriptionEvents;
+    // Optional, as some channels might not have connection events
   }
 
   interface GeneralEvents {
     message: string;
+    raid_message: string;
+    raid_Cancel_message: string;
+    whisper_message: string;
+    no_permission_message: string;
+    ritual_message: string;
   }
 
   interface EventMessages {
@@ -211,4 +273,4 @@ declare module "@bot/*";
 declare module "@utils/*";
 declare module "@components/*";
 
-export {};
+export { };

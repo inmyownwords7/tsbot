@@ -1,6 +1,7 @@
 import fs from "fs/promises"; // Using the Promise-based version of the fs module
-import { CHANNEL_DATA_PATH, CHATUSER_PATH } from "../formatting/constants.js";
+import { CHANNEL_DATA_PATH, CHATUSER_PATH, getDynamicDate } from "../formatting/constants.js";
 import { ChatMessage } from "@twurple/chat";
+import { DATE_FORMAT } from "../formatting/constants.js";
 
 /**
  * Description placeholder
@@ -127,6 +128,7 @@ let userIds: string[] = [];
  */
 let channelsMap: Map<string, ChannelConfig> = new Map();
 let userDataMap: Map<string, UserData> = new Map();
+// const userMessageHistory: Map<string, Array<Metadata>> = new Map();
 /**
  * Description placeholder
  * @event date 1:09:20 pm
@@ -244,7 +246,7 @@ async function setupConfig(): Promise<void> {
       });
 
       const formattedData = { channelsMap };
-/**@access JSONWriter */
+      /**@access JSONWriter */
       await fs.writeFile(
         CHANNEL_DATA_PATH,
         JSON.stringify(formattedData, jsonReplacer, 4),
@@ -253,7 +255,7 @@ async function setupConfig(): Promise<void> {
       console.log(`${CHANNEL_DATA_PATH} created successfully.`);
     } else {
       console.log(`Loading configuration from ${CHANNEL_DATA_PATH}...`);
-/**@access JSONReader */
+      /**@access JSONReader */
       const rawData = await fs.readFile(CHANNEL_DATA_PATH, "utf-8");
       const parsedData = JSON.parse(rawData, jsonReviver);
 
@@ -306,49 +308,53 @@ async function loadChatUserData(): Promise<void> {
   }
 }
 
-async function saveChatMessageData(metadata: any): Promise<void> {
+async function saveChatMessageData(metadata: Metadata): Promise<void> {
   try {
-    const userId: string = metadata.userId;
-    if (!userDataMap.has(userId)) {
-      // Create or update user data
-      const userData = {
-        channelId: metadata.channelId,
-        userId: userId,
+    const userId: string | undefined = metadata.userId;
+    if (!userId) {
+      throw new Error('User ID is undefined. Cannot save metadata.');
+    }
+
+    let userData = userDataMap.get(userId);
+
+    // Create a new user data entry if it doesn't exist
+    if (!userData) {
+      userData = {
+        channelId: metadata.channelId || null,
+        userId: metadata.userId || undefined,
         isMod: metadata.isMod || false,
         isVip: metadata.isVip || false,
         isBroadcaster: metadata.isBroadcaster || false,
         isSubscriber: metadata.isSubscriber || false,
-        userName: metadata.userName || undefined,
-        founder: metadata.isFounder || false,
+        isFounder: metadata.isFounder || false,
         color: metadata.color || undefined,
+        userName: metadata.userName,
+        messages: [] // Initialize empty array for messages
       };
-
-      // Update the map
-      userDataMap.set(userId, userData);
-
-      if (metadata.channelId && metadata.color) {
-        channelColors[metadata.channelId] = metadata.color;
-        // console.log(
-        //   `Updated color for channel ${metadata.channelId}: ${metadata.color}`
-        // );
-      }
-
-      // Convert `userDataMap` to a plain object for saving
-      const formattedUserData = { userData: Array.from(userDataMap.entries()) };
-
-      await fs.writeFile(
-        CHATUSER_PATH,
-        JSON.stringify(formattedUserData, jsonReplacer, 4),
-        { encoding: "utf-8" }
-      );
-      // console.log(`Chat metadata for user ${userId} saved successfully.`);
-    } else {
-      // console.log(`User ${userId} already exists. Skipping save.`);
     }
+
+    // Add the new message to the user's message array
+    // Update the map with the latest user data
+    userDataMap.set(userId, userData);
+
+    if (metadata.channelId && metadata.color) {
+      channelColors[metadata.channelId] = metadata.color;
+    }
+
+    // Convert `userDataMap` to a plain object for saving
+    const formattedUserData = { userData: Array.from(userDataMap.entries()) };
+
+    await fs.writeFile(
+      CHATUSER_PATH,
+      JSON.stringify(formattedUserData, jsonReplacer, 4),
+      { encoding: "utf-8" }
+    );
+    console.log(`Chat metadata for user ${userId} saved successfully.`);
   } catch (error) {
     console.error(`Error saving chat metadata: ${error}`);
   }
 }
+
 
 function getUserCount(): number {
   return userDataMap.size;
@@ -419,6 +425,7 @@ async function updateChannelColor(
       isBroadcaster: false,
       isSubscriber: false,
       color: color,
+      messages: []
     };
     // Add the new entry to userDataMap
     userDataMap.set(userId, expectedUserData);
@@ -460,4 +467,5 @@ export {
   channels,
   updateChannelColor,
   channelColors,
+  userDataMap
 };

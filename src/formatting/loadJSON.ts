@@ -1,11 +1,6 @@
 import path from "path";
-import { chatClient } from "../bot.js";
 import { MESSAGES, EVENT_PATH } from "./constants.js"; // Path to your messages.json file
 import { promises } from "fs";
-import { ChatMessage } from "@twurple/chat";
-
-// Load the JSON file with localized messages
-// JSON Reviver is used as a 2nd argument of JSON.parse
 
 /**
  * @type {Array<{ channelName: string }>}
@@ -76,7 +71,7 @@ function getLocalizedMessages(
  */
 async function getEventMessages(
   messageKey:  keyof ChannelEvents, 
-  categoryKey: keyof ModeratorEvent | keyof ConnectionEvents, 
+  categoryKey: keyof ModeratorEvents | keyof ConnectionEvents, 
   replacements: Record<string, string>
 ): Promise<string> {
 
@@ -93,7 +88,7 @@ async function getEventMessages(
   // Type narrowing based on the existence of 'moderatorEvent' or 'connectionEvents'
   if ("moderatorEvent" in eventCategory && eventCategory.moderatorEvent) {
     // If the category is 'moderatorEvent', use the messageKey from ModeratorEvent
-    message = eventCategory.moderatorEvent[messageKey as keyof ModeratorEvent] ?? "";
+    message = eventCategory.moderatorEvents[messageKey as keyof ModeratorEvents] ?? "";
   } else if ("connectionEvents" in eventCategory && eventCategory.connectionEvents) {
     // If the category is 'connectionEvents', use the messageKey from ConnectionEvents
     message = eventCategory.connectionEvents[messageKey as keyof ConnectionEvents] ?? "";
