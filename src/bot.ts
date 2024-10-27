@@ -26,7 +26,7 @@ import {
   ClearMsg,
 } from "@twurple/chat";
 import { isCommand, setColor } from "./utils/helpers.js";
-import { botId, getDynamicDate } from "./formatting/constants.js";
+import { botId, GETDYNAMICDATE } from "./formatting/constants.js";
 import {
   HelixBanUserRequest,
   UserIdResolvable,
@@ -61,13 +61,7 @@ const chatClient: ChatClient = new ChatClient({
  *
  * @type {string[]}
  */
-let activeUserGroups: string[] = ["woooordbot"];
-/**
- * @returns {string[]
- *}
- * @type {string[]}
- */
-let activeUserGroupsIds: string[] = ["439212677", "132881296", "65538724"];
+
 // await extractIdsFromUser(activeUserGroups);
 
 /**
@@ -102,6 +96,8 @@ async function bot(): Promise<void> {
 }
 
 export async function join(chatClient: ChatClient): Promise<void> {
-  chatClient.onJoin((channel, user) => {`${user} ${channel}`});
+  chatClient.onJoin((channel, user) => {
+    `${user} ${channel}`;
+  });
 }
 export { chatClient, bot };

@@ -13,7 +13,7 @@ import {
 
 import { logChannelMessage } from "./logger.js";
 import { channelsMap } from "../utils/async config.js";
-import { getDynamicDate, botId } from "../formatting/constants.js";
+import { GETDYNAMICDATE, botId } from "../formatting/constants.js";
 import { getEventMessages } from "../formatting/loadJSON.js";
 import { chatClient } from "../bot.js";
 
@@ -50,6 +50,11 @@ async function eventHandlers(event: EventEmitter): Promise<void> {
     });
     console.log(message);
     await logChannelMessage(channel, user, text, msg);
+
+    /**@commands */
+    if(text === "timeout") {
+
+    }
   });
 
   // Handles the 'ban' event
@@ -337,19 +342,11 @@ async function eventHandlers(event: EventEmitter): Promise<void> {
       console.log(message);
     }
   );
-  event.on("join", 
-    async ({
-    channel,
-    user
-  }) => {
-    const message = await getEventMessages(
-      "connectionEvents",
-      "join_message",
-      {
-        channel: channel, 
-        user: user
-      }
-    );
+  event.on("join", async ({ channel, user }) => {
+    const message = await getEventMessages("connectionEvents", "join_message", {
+      channel: channel,
+      user: user,
+    });
     console.log(message);
   });
 }
@@ -434,7 +431,7 @@ async function registerChatClientEvents(chatClient: ChatClient) {
 
 async function connectionEvents(chatClient: ChatClient): Promise<void> {
   chatClient.onJoin((channel: string, user: string): void => {
-    event.emit("join", {channel, user});
+    event.emit("join", { channel, user });
   });
 
   chatClient.onDisconnect(() => {
@@ -446,22 +443,20 @@ async function connectionEvents(chatClient: ChatClient): Promise<void> {
   });
 
   chatClient.onPart((channel: string, user: string) => {
-    event.emit("part", 
-      {channel, user});
+    event.emit("part", { channel, user });
   });
 }
 
 async function subEvents(chatClient: ChatClient): Promise<void> {
   chatClient.onSub(
     (channel: string, user: string, subInfo: ChatSubInfo, msg: UserNotice) => {
-      event.emit("submode", 
-        {channel, user, subInfo, msg});
+      event.emit("submode", { channel, user, subInfo, msg });
     }
   );
 
   chatClient.onResub(
     (channel: string, user: string, subInfo: ChatSubInfo, msg: UserNotice) => {
-      event.emit("resub", {channel, user, subInfo, msg});
+      event.emit("resub", { channel, user, subInfo, msg });
     }
   );
 
@@ -472,7 +467,7 @@ async function subEvents(chatClient: ChatClient): Promise<void> {
       subInfo: ChatSubGiftInfo,
       msg: UserNotice
     ) => {
-      event.emit("subgift",  {channel, user, subInfo, msg});
+      event.emit("subgift", { channel, user, subInfo, msg });
     }
   );
 
@@ -483,43 +478,42 @@ async function subEvents(chatClient: ChatClient): Promise<void> {
       subInfo: ChatCommunitySubInfo,
       msg: UserNotice
     ) => {
-      event.emit("communitygift",  
-        {channel, user, subInfo, msg});
+      event.emit("communitygift", { channel, user, subInfo, msg });
     }
   );
 }
 
 async function channelEvents(chatClient: ChatClient): Promise<void> {
   chatClient.onChatClear((channel: string, msg: ClearChat) => {
-    event.emit("clear", {channel, msg});
+    event.emit("clear", { channel, msg });
   });
 
   chatClient.onSubsOnly((channel: string, enabled: boolean) => {
-    event.emit("onsubmode", {channel, enabled});
+    event.emit("onsubmode", { channel, enabled });
   });
 
   chatClient.onEmoteOnly((channel: string, enabled: boolean) => {
-    event.emit("emotemode", {channel, enabled});
+    event.emit("emotemode", { channel, enabled });
   });
 
   chatClient.onFollowersOnly(
     (channel: string, enabled: boolean, delay?: number | undefined) => {
-      event.emit("followmode", {channel, enabled, delay});
+      event.emit("followmode", { channel, enabled, delay });
     }
   );
 
   chatClient.onPart((channel: string, user: string) => {
-    event.emit("part", {channel, user});
+    event.emit("part", { channel, user });
   });
 
   chatClient.onSlow(
     (channel: string, enabled: boolean, delay?: number | undefined) => {
-      event.emit("slowmode", {channel, enabled, delay});
+      event.emit("slowmode", { channel, enabled, delay });
     }
   );
 
   chatClient.onUniqueChat((channel: string, enabled: boolean) => {
-    event.emit("uniquemode", {channel, enabled});
+    event.emit("uniquemode", { channel, enabled });
   });
 }
 

@@ -7,10 +7,17 @@
     "**/CVS": true,
     "**/.DS_Store": true,
     "**/Thumbs.db": true,
-    "**/node_modules": false,
+    "**/node_modules": true,
     ".vscode/launch.json": true,
-    "dist/src": false,
-    "docs": true
+    "dist/src": true,
+    "docs": true,
+    "dist": true
   },
-  "hide-files.files": [".vscode/launch.json", "dist/src", "docs", "dist"]
+  "hide-files.files": [
+    ".vscode/launch.json",
+    "dist/src",
+    "docs",
+    "dist",
+    "Logs"
+  ]
 }

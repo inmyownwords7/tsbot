@@ -1,12 +1,10 @@
 import { addColors, createLogger, format, Logger, transports } from "winston";
 import "winston-daily-rotate-file";
-import { botId, getTimeFormat } from "../formatting/constants.js";
+import { botId, GETTIMEFORMAT } from "../formatting/constants.js";
 import stripAnsi from "strip-ansi";
 import {
-  channels,
   channelsMap,
-  channelColors,
-  updateChannelColor,
+  channelColors
 } from "../utils/async config.js";
 import { ChatMessage } from "@twurple/chat";
 import chalk, { ChalkInstance } from "chalk";
@@ -85,7 +83,7 @@ const initializeChannelLogger = async (
     level: "info",
     format: format.combine(
       format.colorize(), // Enable color formatting
-      format.timestamp({ format: () => getTimeFormat() }),
+      format.timestamp({ format: () => GETTIMEFORMAT() }),
       format.metadata(),
       format.printf(({ level, message, timestamp, metadata }) => {
         try {
@@ -139,7 +137,7 @@ const initializeChannelLogger = async (
         maxSize: "20m",
         maxFiles: "3d",
         format: format.combine(
-          format.timestamp({ format: () => getTimeFormat() }), // Use DATE_FORMAT for timestamp
+          format.timestamp({ format: () => GETTIMEFORMAT() }), // Use DATE_FORMAT for timestamp
           format.printf(({ level, message, timestamp }) =>
             stripAnsi(`${timestamp} [CHAT ${level}]: ${message}`)
           )
@@ -158,7 +156,7 @@ const initializeChannelLogger = async (
 const httpRequestLogger: Logger = createLogger({
   level: "info",
   format: format.combine(
-    format.timestamp({ format: () => getTimeFormat() }), // Use DATE_FORMAT for timestamp
+    format.timestamp({ format: () => GETTIMEFORMAT() }), // Use DATE_FORMAT for timestamp
     format.printf(
       ({ level, message, timestamp }) =>
         `${timestamp} [HTTP ${level}]: ${message}`

@@ -1,7 +1,7 @@
 // async function connectionEvents(chatClient: ChatClient): Promise<void> {
 //   chatClient.onJoin((channel: string, user: string): void => {
 //     console.log(
-//       colors.defaultColor(`${getDynamicDate()}: ${user} has joined ${channel}`)
+//       colors.defaultColor(`${GETDYNAMICDATE()}: ${user} has joined ${channel}`)
 //     );
 //   });
 
@@ -112,7 +112,7 @@
 async function connectionEvents(chatClient: ChatClient): Promise<void> {
   chatClient.onJoin((channel: string, user: string): void => {
     console.log(
-      colors.defaultColor(`${getDynamicDate()}: ${user} has joined ${channel}`)
+      colors.defaultColor(`${GETDYNAMICDATE()}: ${user} has joined ${channel}`)
     );
   });
 
@@ -135,7 +135,7 @@ async function connectionEvents(chatClient: ChatClient): Promise<void> {
 async function connectionEvents(chatClient: ChatClient): Promise<void> {
   chatClient.onJoin((channel: string, user: string): void => {
     console.log(
-      colors.defaultColor(`${getDynamicDate()}: ${user} has joined ${channel}`)
+      colors.defaultColor(`${GETDYNAMICDATE()}: ${user} has joined ${channel}`)
     );
   });
 
