@@ -5,6 +5,8 @@ const CHANNEL_DATA_PATH: string = "./channelsData.json";
 const CHATUSER_PATH: string ="./users.json";
 const MESSAGES: string = path.resolve(process.cwd(), "/home/words/tsbot/src/formatting/messages.json")
 const EVENT_PATH: string = path.resolve(process.cwd(), "/home/words/tsbot/src/formatting/EVENTS.json")
+// const USER_DATA_MAP: Map<string, UserData> = new Map();
+// const CHANNEL_MAP: Map<string, ChannelConfig> = new Map();
 
 const ERROR_MESSAGES: {userNotFound: string, invalidCredentials: string} = {
     userNotFound: 'User not found',
@@ -28,5 +30,14 @@ const getTimeFormat = (): string => moment(STARTING_TIME).format('h:mm:ss a');
 const formattedStartTime: string = moment(STARTING_TIME).format('h:mm:ss a')
 // Function to get the current time
 const TIME_FORMAT = (): string => moment().format('h:mm:ss a');
+// Initialize the combined maps
+const mapTypes: MapTypes = {
+    USER_DATA_MAP: new Map<string, UserData>(),
+    CHANNEL_MAP: new Map<string, ChannelConfig>(),
+  };
 
-export {DATE_FORMAT, CHANNEL_DATA_PATH, CHATUSER_PATH, ERROR_MESSAGES, SUCCESS_MESSAGES, botId, TIME_FORMAT, STARTING_TIME, formattedStartTime, getDynamicDate, getTimeFormat, MESSAGES, EVENT_PATH};
+// const paths : PathTypes = {
+
+// }
+
+export {DATE_FORMAT, CHANNEL_DATA_PATH, CHATUSER_PATH, ERROR_MESSAGES, SUCCESS_MESSAGES, botId, TIME_FORMAT, STARTING_TIME, formattedStartTime, getDynamicDate, getTimeFormat, MESSAGES, EVENT_PATH, mapTypes};

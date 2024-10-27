@@ -21,6 +21,7 @@ import { getDynamicDate } from "../formatting/constants.js";
 import { colors } from "../formatting/chalk.js";
 import { getEventMessages } from "../formatting/loadJSON.js";
 import { chatClient } from "../bot.js";
+
 const userMessageHistory: Map<string, Metadata[]> = new Map();
 const event = new EventEmitter();
 registerEvent("message", async ({ channel, user, text, msg }: MessageEvent) => {
@@ -50,9 +51,6 @@ registerEvent("message", async ({ channel, user, text, msg }: MessageEvent) => {
     emotes: msg.userInfo.badgeInfo, // Array of emotes used in the message
     badges: msg.userInfo.badges,
     color: color,
-    messageId: id,
-    messageContent: text,
-    timestamp: new Date(),
     messages: [], // Current timestamp
   };
 

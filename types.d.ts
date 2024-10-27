@@ -1,40 +1,20 @@
-import { ChalkInstance } from "chalk";
 import {
   ChatMessage,
   ChatAnnouncementInfo,
   ChatSubInfo,
   ChatSubGiftInfo,
   ChatCommunitySubInfo,
+  ClearChat,
+  ClearMsg,
+  UserNotice,
 } from "@twurple/chat";
-import { ClearChat, ClearMsg, UserNotice } from "@twurple/chat";
-import { UserIdResolvable, AuthProvider } from "@twurple/api";
+import { AuthProvider, UserIdResolvable } from "@twurple/api";
 
+// Declare global scope to define interfaces globally
 declare global {
-  // Log color and badge type enums
-  type LogColor = "red" | "blue" | "green" | "yellow" | "magenta" | "cyan";
-  type BadgeType = "moderator" | "deputy" | "vip" | "pleb" | "subscriber";
-  // Subscription Types
-  type SubscriptionType =
-    | "new"
-    | "extend"
-    | "resub"
-    | "community"
-    | "communityPayForward"
-    | "subgift";
-
-  // Color keys for different roles or events
-  type ColorKeys =
-    | "tfblade"
-    | "iwdominate"
-    | "akanemko"
-    | "perkz_lol"
-    | "magenta"
-    | "cyan"
-    | "white"
-    | "gray"
-    | "defaultColor";
-
-  // MetaData Interface for chat message details
+  /**
+   * Chat Data & Metadata
+   */
   interface MessageMetaData {
     channelId?: string;
     isMod?: boolean;
@@ -52,9 +32,76 @@ declare global {
     userName: string;
   }
 
-  // Remove ChatClient Interface to avoid conflict with Twurple's ChatClient
+  interface Metadata {
+    channelId: string | null;
+    channel: string;
+    isMod: boolean;
+    isSubscriber: boolean;
+    isVip: boolean;
+    isBroadcaster: boolean;
+    isFounder?: boolean;
+    userId: string;
+    userName: string;
+    emotes: Map<string, string>;
+    badges: Map<string, string>;
+    color: string | undefined;
+    messages: Array<{
+      messageId?: string;
+      messageContent?: string;
+      timestamp?: Date;
+    }>;
+  }
 
-  // Event Interfaces for Twitch events
+  interface MessageData {
+    messageContent: string;
+    timestamp: Date;
+    messageId: string;
+  }
+
+  /**
+   * User and Channel Configuration
+   */
+  interface UserData {
+    userId: string;
+    userName: string;
+    channelId: string | null;
+    isMod: boolean;
+    isVip: boolean;
+    isBroadcaster: boolean;
+    isSubscriber: boolean;
+    isFounder: boolean;
+    color: string | undefined;
+    messages: Array<{
+      messageContent?: string;
+      timestamp?: string;
+      msgId?: string;
+    }>;
+  }
+
+  interface ChannelConfig {
+    isForeignEnabled: boolean;
+    shouldThankSubscription: boolean;
+    toggleLog: boolean;
+    logColor: string;
+    isFlamingEnabled: boolean;
+    toggleTempo: boolean;
+    banCount: number;
+    messageDeletedCounter: number;
+    timeCounter: number;
+    subCounter: number;
+    accountUserAge: boolean;
+    isKoreanEnabled: boolean;
+  }
+
+  interface ChannelInterface {
+    channelName: string;
+    id?: string;
+    isLive?: boolean;
+  }
+
+  /**
+   * Twitch Event Interfaces
+   */
   interface MessageEvent {
     channel: string;
     user: string;
@@ -94,135 +141,16 @@ declare global {
     subInfo: ChatSubInfo | ChatSubGiftInfo | ChatCommunitySubInfo;
   }
 
-  // User Data Interface for user information in events
-  interface UserData {
-    channelId?: string | null;
-    userId: string | undefined;
-    isMod: boolean;
-    isVip: boolean;
-    isBroadcaster: boolean;
-    isSubscriber: boolean;
-    userName: string;
-    isStaff?: boolean;
-    isParty?: boolean;
-    isDeputy?: boolean;
-    isFounder?: boolean;
-    color?: string;
-    messages:
-    Array<{
-      messageContent?: string;
-      timestamp?: string;
-      msgId?: string;
-    }>
-  }
-
-  interface MessageData {
-    messageContent: string;
-    timestamp: Date;
-    messageId: string;
-  }
-
-  // ChatConfig Interface for chat configuration
-  interface ChatConfig {
-    authProvider: AuthProvider;
-    channels: string[];
-    webSocket: boolean;
-  }
-
-  // Summoner Info and Ranked Info for external data
-  interface SummonerInfo {
-    id: string;
-    accountId: string;
-    puuid: string;
-    name: string;
-    profileIconId: number;
-    summonerLevel: number;
-  }
-
-  interface RankedInfo {
-    leagueId: string;
-    queueType: string;
-    tier: string;
-    rank: string;
-    leaguePoints: number;
-    wins: number;
-    losses: number;
-  }
-
-  // ChannelConfig Interface for channel settings
-  interface ChannelConfig {
-    isForeignEnabled: boolean;
-    shouldThankSubscription: boolean;
-    toggleLog: boolean;
-    logColor: string;
-    isFlamingEnabled: boolean;
-    toggleTempo: boolean;
-    banCount: number;
-    messageDeletedCounter: number;
-    timeCounter: number;
-    subCounter: number;
-    accountUserAge: boolean;
-    isKoreanEnabled: boolean;
-  }
-
-  interface ChannelConfig {
-    isForeignEnabled: boolean;
-    shouldThankSubscription: boolean;
-    toggleLog: boolean;
-    logColor: string;
-    isFlamingEnabled: boolean;
-    toggleTempo: boolean;
-    banCount: number;
-    messageDeletedCounter: number;
-    timeCounter: number;
-    subCounter: number;
-    accountUserAge: boolean;
-    isKoreanEnabled: boolean;
-  }
-  
-  interface UserData {
-    channelId: string | null;
-    userId: string;
-    isMod: boolean;
-    isVip: boolean;
-    isBroadcaster: boolean;
-    isSubscriber: boolean;
-    isFounder: boolean;
-    color: string | undefined;
-    userName: string;
-    messages: Array<ChatMessage>;
-  }
-  // Metadata Interface for detailed message metadata
-  interface Metadata {
-    channelId: string | null;
-    channel: string;
-    isMod: boolean;
-    isSubscriber: boolean;
-    isVip: boolean;
-    isBroadcaster: boolean;
-    isFounder?: boolean;
-    userId: string;
-    userName: string;
-    emotes: Map<string, string>;
-    badges: Map<string, string>;
-    color: string | undefined;
-    messages: Array<{
-      messageId?: string;
-      messageContent?: string;
-      timestamp?: Date;
-    }>
-    messageId?: string;
-    messageContent?: string;
-    timestamp?: Date;
-  }
-
+  /**
+   * Event Handling Interfaces
+   */
   interface SubscriptionEvents {
     subscription_message: string;
     resub_message: string;
     gift_subscription_message: string;
     community_sub_message: string;
     reward_gift_message: string;
-    bits_badge_upgrade_message: string
+    bits_badge_upgrade_message: string;
   }
 
   interface ModeratorEvents {
@@ -246,31 +174,60 @@ declare global {
     part_message: string;
   }
 
-  interface ChannelEvents {
-    moderatorEvents: ModeratorEvents;
-    generalEvents: GeneralEvents;
-    connectionEvents: ConnectionEvents;
-    subscriptionEvents: SubscriptionEvents;
-    // Optional, as some channels might not have connection events
-  }
-
   interface GeneralEvents {
     message: string;
     raid_message: string;
-    raid_Cancel_message: string;
+    raid_cancel_message: string;
     whisper_message: string;
     no_permission_message: string;
     ritual_message: string;
   }
 
+  interface ChannelEvents {
+    moderatorEvents: ModeratorEvents;
+    generalEvents: GeneralEvents;
+    connectionEvents: ConnectionEvents;
+    subscriptionEvents: SubscriptionEvents;
+  }
+
   interface EventMessages {
     [channel: string]: ChannelEvents; // Dynamic key for each channel (e.g., "tfblade", "iwdominate")
   }
+
+  /**
+   * Summoner Info (External Data)
+   */
+  interface SummonerInfo {
+    id: string;
+    accountId: string;
+    puuid: string;
+    name: string;
+    profileIconId: number;
+    summonerLevel: number;
+  }
+
+  interface RankedInfo {
+    leagueId: string;
+    queueType: string;
+    tier: string;
+    rank: string;
+    leaguePoints: number;
+    wins: number;
+    losses: number;
+  }
+
+  /**
+   * Mapping for User and Channel Data
+   */
+  type MapTypes = {
+    USER_DATA_MAP: Map<string, UserData>;
+    CHANNEL_MAP: Map<string, ChannelConfig>;
+  };
 }
 
-// Module declarations for custom imports
+// Custom module declarations
 declare module "@bot/*";
 declare module "@utils/*";
 declare module "@components/*";
 
-export { };
+export {};
