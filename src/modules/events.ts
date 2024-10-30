@@ -31,7 +31,6 @@ async function eventHandlers(event: EventEmitter): Promise<void> {
       }
     }
     const roleString = metadataParts.join(", ");
-    console.log(`[${channel}] ${roleString} ${user}: ${text}`);
     await logChannelMessage(channel, user, text, msg);
   });
 
@@ -164,14 +163,17 @@ async function connectionEvents(chatClient: ChatClient): Promise<void> {
   });
 
   chatClient.onDisconnect(() => {
+    event.emit("disconnect")
     console.log("Disconnected from Twitch");
   });
 
   chatClient.onConnect(() => {
+    event.emit("connect")
     console.log("Connected to Twitch");
   });
 
   chatClient.onPart((channel, user) => {
+    event.emit("part", { channel, user });
     console.log(`${user} has left ${channel}`);
   });
 }
@@ -200,18 +202,22 @@ async function channelEvents(chatClient: ChatClient): Promise<void> {
   });
 
   chatClient.onSubsOnly((channel, enabled) => {
+    event.emit("subsOnly", { channel, enabled })
     console.log(`Sub-only mode is ${enabled ? "enabled" : "disabled"} in ${channel}`);
   });
 
   chatClient.onEmoteOnly((channel, enabled) => {
+    event.emit("emotesOnly", enabled)
     console.log(`Emote-only mode is ${enabled ? "enabled" : "disabled"} in ${channel}`);
   });
 
   chatClient.onFollowersOnly((channel, enabled, delay) => {
+    event.emit("followersOnly", { channel, enabled, delay })
     console.log(`Followers-only mode is ${enabled ? "enabled" : "disabled"} in ${channel} with delay ${delay}`);
   });
 
   chatClient.onPart((channel, user) => {
+    event.emit("part", { channel, user })
     console.log(`${user} has left ${channel}`);
   });
 
