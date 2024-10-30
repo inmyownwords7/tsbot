@@ -96,7 +96,9 @@ async function getEventMessages(
       if (connectionEvents && messageKey in connectionEvents) {
         message = connectionEvents[messageKey as keyof ConnectionEvents];
       } else {
-        await join(chatClient) // Fallback join message
+       chatClient.onJoin((channel = "iwdominate", user= "wooooordbot") => {
+
+       })// Fallback join message
       }
       break;
     }

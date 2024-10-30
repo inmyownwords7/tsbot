@@ -23,33 +23,30 @@ declare global {
     | "subgift";
 
   // Color keys for different roles or events
-  type ColorKeys =
-    | "tfblade"
-    | "iwdominate"
-    | "akanemko"
-    | "perkz_lol"
-    | "magenta"
-    | "cyan"
-    | "white"
-    | "gray"
-    | "defaultColor";
+  // type ColorKeys =
+  //   | "tfblade"
+  //   | "iwdominate"
+  //   | "akanemko"
+  //   | "perkz_lol"
+  //   | "magenta"
+  //   | "cyan"
+  //   | "white"
+  //   | "gray"
+  //   | "defaultColor";
 
   // MetaData Interface for chat message details
-  interface MessageMetaData {
-    channelId?: string;
-    isMod?: boolean;
-    isVip?: boolean;
-    isBroadcaster?: boolean;
+  interface GroupMetaData {
     isParty?: boolean;
     isStaff?: boolean;
     isDeputy?: boolean;
     isEntitled?: boolean;
     isPermitted?: boolean;
-    isSubscriber?: boolean;
-    userId?: string;
-    userName: string;
   }
 
+  interface BadgesAndEmotes extends UserData{
+    badges?: Map<string, string>;
+    emotes?: Map<string, string>;
+  }
   // Remove ChatClient Interface to avoid conflict with Twurple's ChatClient
 
   // Event Interfaces for Twitch events
@@ -93,19 +90,16 @@ declare global {
   }
 
   // User Data Interface for user information in events
-  interface UserData {
-    userId: string;
-    isMod: boolean;
-    isVip: boolean;
-    isBroadcaster: boolean;
-    isSubscriber: boolean;
+  interface UserData extends MessageMetaData {
+    isMod?: boolean;
+    isVip?: boolean;
+    isBroadcaster?: boolean;
+    isSubscriber?: boolean;
     userName: string;
-    isStaff?: boolean;
-    isParty?: boolean;
-    isDeputy?: boolean;
+    userId: string;
     isFounder?: boolean;
-    channelId?: string | UserIdResolvable | null;
-    color?: string;
+    channelId?: string | undefined;
+    color?: string | undefined;
   }
 
   // ChatConfig Interface for chat configuration
@@ -152,20 +146,12 @@ declare global {
   }
 
   // Metadata Interface for detailed message metadata
-  interface Metadata {
-    channel: string;
-    isMod: boolean;
-    isSubscriber: boolean;
-    isVip: boolean;
-    isBroadcaster: boolean;
-    userId: string;
-    userName: string;
-    messageId: string;
-    messageContent: string;
-    timestamp: Date;
-    emotes: Map<string, string>;
-    badges: Map<string, string>;
-    color: string | undefined;
+  interface MessageMetaData {
+    messages: Array<{
+      timestamp: Date;
+      msgId: string;
+      messageContent: string;
+    }>;
   }
 
   interface SubscriptionEvents {
@@ -174,7 +160,7 @@ declare global {
     gift_subscription_message: string;
     community_sub_message: string;
     reward_gift_message: string;
-    bits_badge_upgrade_message: string
+    bits_badge_upgrade_message: string;
   }
 
   interface ModeratorEvents {
@@ -203,7 +189,7 @@ declare global {
     generalEvents: GeneralEvents;
     connectionEvents: ConnectionEvents;
     subscriptionEvents: SubscriptionEvents;
-     // Optional, as some channels might not have connection events
+    // Optional, as some channels might not have connection events
   }
 
   interface GeneralEvents {

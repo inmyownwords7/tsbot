@@ -110,6 +110,12 @@ let channels: Array<{ channelName: string }> = [
 ];
 
 // Dynamically create `channelColors` from the `channels` array
+/**
+ * Description placeholder
+ * @date 1:53:55 pm
+ *
+ * @type {Record<string, string>}
+ */
 let channelColors: Record<string, string> = channels.reduce(
   (acc, { channelName }) => {
     acc[channelName] = ""; // Initialize each channel with an empty string or default value
@@ -118,6 +124,12 @@ let channelColors: Record<string, string> = channels.reduce(
   {} as Record<string, string>
 );
 
+/**
+ * Description placeholder
+ * @date 1:53:55 pm
+ *
+ * @type {string[]}
+ */
 let userIds: string[] = [];
 /**
  * Description placeholder
@@ -126,6 +138,12 @@ let userIds: string[] = [];
  * @type {Map<string, ChannelConfig>}
  */
 let channelsMap: Map<string, ChannelConfig> = new Map();
+/**
+ * Description placeholder
+ * @date 1:53:55 pm
+ *
+ * @type {Map<string, UserData>}
+ */
 let userDataMap: Map<string, UserData> = new Map();
 /**
  * Description placeholder
@@ -244,7 +262,7 @@ async function setupConfig(): Promise<void> {
       });
 
       const formattedData = { channelsMap };
-/**@access JSONWriter */
+      /**@access JSONWriter */
       await fs.writeFile(
         CHANNEL_DATA_PATH,
         JSON.stringify(formattedData, jsonReplacer, 4),
@@ -253,7 +271,7 @@ async function setupConfig(): Promise<void> {
       console.log(`${CHANNEL_DATA_PATH} created successfully.`);
     } else {
       console.log(`Loading configuration from ${CHANNEL_DATA_PATH}...`);
-/**@access JSONReader */
+      /**@access JSONReader */
       const rawData = await fs.readFile(CHANNEL_DATA_PATH, "utf-8");
       const parsedData = JSON.parse(rawData, jsonReviver);
 
@@ -268,6 +286,13 @@ async function setupConfig(): Promise<void> {
     console.error(`Error during setup: ${error}`);
   }
 }
+/**
+ * Description placeholder
+ * @date 1:53:55 pm
+ *
+ * @async
+ * @returns {Promise<void>}
+ */
 async function loadChatUserData(): Promise<void> {
   try {
     const chatUserFileExists = await fs
@@ -306,56 +331,73 @@ async function loadChatUserData(): Promise<void> {
   }
 }
 
-async function saveChatMessageData(metadata: any): Promise<void> {
+/**
+ * Description placeholder
+ * @date 1:53:55 pm
+ *
+ * @async
+ * @param {UserData} metadata
+ * @param {ChatMessage} client
+ * @returns {Promise<void>}
+ */
+async function saveChatMessageData(
+  metadata: UserData,
+  client: ChatMessage
+): Promise<void> {
   try {
     const userId: string = metadata.userId;
+    let userData = userDataMap?.get(userId) || { ...metadata, messages: [] };
+    userData.messages.push({
+      timestamp: new Date(),
+      messageContent: metadata.messages[0]?.messageContent || "Default message",
+      msgId: client.id,
+    });
+
+    userDataMap.set(userId, userData);
     if (!userDataMap.has(userId)) {
-      // Create or update user data
-      const userData = {
-        channelId: metadata.channelId,
-        userId: userId,
-        isMod: metadata.isMod || false,
-        isVip: metadata.isVip || false,
-        isBroadcaster: metadata.isBroadcaster || false,
-        isSubscriber: metadata.isSubscriber || false,
-        userName: metadata.userName || undefined,
-        founder: metadata.isFounder || false,
-        color: metadata.color || undefined,
-      };
-
-      // Update the map
-      userDataMap.set(userId, userData);
-
-      if (metadata.channelId && metadata.color) {
-        channelColors[metadata.channelId] = metadata.color;
-        // console.log(
-        //   `Updated color for channel ${metadata.channelId}: ${metadata.color}`
-        // );
-      }
-
-      // Convert `userDataMap` to a plain object for saving
-      const formattedUserData = { userData: Array.from(userDataMap.entries()) };
-
-      await fs.writeFile(
-        CHATUSER_PATH,
-        JSON.stringify(formattedUserData, jsonReplacer, 4),
-        { encoding: "utf-8" }
-      );
-      // console.log(`Chat metadata for user ${userId} saved successfully.`);
-    } else {
-      // console.log(`User ${userId} already exists. Skipping save.`);
+      userDataMap.set(userId, { ...metadata, messages: [] });
     }
+
+    if (metadata.channelId && metadata.color) {
+      channelColors[metadata.channelId] = metadata.color;
+      // console.log(
+      //   `Updated color for channel ${metadata.channelId}: ${metadata.color}`
+      // );
+    }
+
+    // Convert `userDataMap` to a plain object for saving
+    const formattedUserData = { userData: Array.from(userDataMap.entries()) };
+
+    await fs.writeFile(
+      CHATUSER_PATH,
+      JSON.stringify(formattedUserData, jsonReplacer, 4),
+      { encoding: "utf-8" }
+    );
+    // console.log(`Chat metadata for user ${userId} saved successfully.`);
   } catch (error) {
     console.error(`Error saving chat metadata: ${error}`);
   }
 }
 
+/**
+ * Description placeholder
+ * @date 1:53:55 pm
+ *
+ * @returns {number}
+ */
 function getUserCount(): number {
   return userDataMap.size;
 }
 
 // Usage:
 
+/**
+ * Description placeholder
+ * @date 1:53:55 pm
+ *
+ * @async
+ * @returns {Promise<number>}
+ */
 async function getUserCountFromFile(): Promise<number> {
   try {
     const rawChatUserData = await fs.readFile(CHATUSER_PATH, "utf-8");
@@ -373,6 +415,18 @@ async function getUserCountFromFile(): Promise<number> {
   }
 }
 
+/**
+ * Description placeholder
+ * @date 1:53:55 pm
+ *
+ * @async
+ * @param {string} channel
+ * @param {string} user
+ * @param {(string | undefined)} color
+ * @param {string} userId
+ * @param {ChatMessage} msg
+ * @returns {Promise<void>}
+ */
 async function updateChannelColor(
   channel: string,
   user: string,
@@ -419,6 +473,7 @@ async function updateChannelColor(
       isBroadcaster: false,
       isSubscriber: false,
       color: color,
+      messages: [],
     };
     // Add the new entry to userDataMap
     userDataMap.set(userId, expectedUserData);

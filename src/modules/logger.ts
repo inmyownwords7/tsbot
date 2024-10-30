@@ -3,7 +3,6 @@ import "winston-daily-rotate-file";
 import { botId, getTimeFormat } from "../formatting/constants.js";
 import stripAnsi from "strip-ansi";
 import {
-  channels,
   channelsMap,
   channelColors,
   updateChannelColor,
@@ -175,10 +174,6 @@ function getChannelColor(channelName: string): ChalkInstance {
   return hexColor ? chalk.hex(hexColor) : chalk.white; // Default to white if no color is set
 }
 
-// function channelShouldUseSpecialColor(channel: string): boolean {
-//   return channels.some((channelEntry) => channelEntry.channelName === channel);
-// }
-
 // Function to log chat messages
 /**
  * Logs a chat message
@@ -186,9 +181,8 @@ function getChannelColor(channelName: string): ChalkInstance {
  * @param {string} user - The user sending the message
  * @param {string} text - The message text
  * @param {object} msg
- * @param {object} metadata - Additional metadata (if any)
- * @typedef {metadata} metadata
  */
+
 let logChannelMessage = async (
   channel: string,
   user: string,
@@ -203,27 +197,28 @@ let logChannelMessage = async (
     userId,
     displayName,
     color,
+    isFounder,
   } = msg.userInfo;
+  let { channelId } = msg;
 
-  // if (color) {
-  //   await updateChannelColor(channel, user, color, userId, msg);
-  // }
+  if (color) {
+    await updateChannelColor(channel, user, color, userId, msg);
+  }
 
-  let metadata: Metadata = {
-    channel: channel,
+  let metadata: BadgesAndEmotes = {
+    channelId: channelId || undefined,
     isMod: isMod,
     isSubscriber: isSubscriber,
     isVip: isVip,
+    isFounder: isFounder,
     isBroadcaster: isBroadcaster,
     userId: userId,
     userName: displayName,
-    messageId: msg.id,
-    messageContent: text, // You can extract additional info like type, badges, etc.
-    timestamp: msg.date,
-    emotes: msg.userInfo.badgeInfo, // Array of emotes used in the message
     badges: msg.userInfo.badges,
-    color: color, // Badges can include things like VIP, mod, etc.
+    color: color || undefined,
+    messages: [], // Badges can include things like VIP, mod, etc.
   };
+
   // console.warn(`logChannelMessagecalled for ${channel}: ${user}: ${text}` + " line 155 of logger.ts");
   let channelLoggerInstance = await initializeChannelLogger(channel, user, msg); // Create logger for each channel
 
@@ -236,26 +231,8 @@ let logChannelMessage = async (
  * Logs an HTTP message
  * @param {string} message - The HTTP message to log
  */
-export const logHttpRequest = (message: string): void => {
+const logHttpRequest = (message: string): void => {
   httpRequestLogger.info(message);
 };
-// Helper function to determine baseColorInstance based on roles
 
-// Use this helper in the logging function
-// function getRoleBasedColor(metadata: any, defaultColor: ChalkInstance): ChalkInstance {
-//   if (metadata.isBroadcaster) {
-//     return roleToRoleColor.get('broadcaster') || defaultColor;
-//   }
-//   if (metadata.isMod) {
-//     return roleToRoleColor.get('moderator') || defaultColor;
-//   }
-//   if (metadata.isVip) {
-//     return roleToRoleColor.get('vip') || defaultColor;
-//   }
-//   if (metadata.isSubscriber) {
-//     return roleToRoleColor.get('subscriber') || defaultColor;
-//   }
-//   return roleToRoleColor.get('pleb') || defaultColor; // Default color for non-subscribers
-// }
-
-export { httpRequestLogger, logChannelMessage };
+export { httpRequestLogger, logChannelMessage, logHttpRequest };

@@ -1,5 +1,5 @@
 {
-    "accessToken": "jqv5qiis4bl4rmgsgpg88dmonrkjx6",
+    "accessToken": "4lyfikode9r892m6nyag2ku7itod0l",
     "refreshToken": "fyjo37wgl02sq0179n3jii0lqx3udbvafc0qt39mvbosgw34o0",
     "scope": [
         "analytics:read:extensions",
@@ -65,6 +65,6 @@
         "whispers:edit",
         "whispers:read"
     ],
-    "expiresIn": 13127,
-    "obtainmentTimestamp": 1729870272668
+    "expiresIn": 14958,
+    "obtainmentTimestamp": 1730298095336
 }

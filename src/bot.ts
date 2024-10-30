@@ -2,13 +2,7 @@
 // import en from "formatting/messages.json"
 // en
 import {
-  ChatClient,
-  ChatCommunitySubInfo,
-  ChatMessage,
-  ChatSubExtendInfo,
-  ChatSubInfo,
-  UserNotice,
-  // logChatMessage,
+  ChatClient
 } from "./index.js";
 /**@this Maps cannot be used for global exports*/
 import {
@@ -16,33 +10,8 @@ import {
   loadChatUserData,
   saveChatMessageData,
 } from "./utils/async config.js";
-import { authProvider, api } from "./modules/auth.js";
-import { colors } from "./formatting/chalk.js";
-import { logChannelMessage } from "./modules/logger.js";
-import {
-  ChatAnnouncementInfo,
-  ChatSubGiftInfo,
-  ClearChat,
-  ClearMsg,
-} from "@twurple/chat";
-import { isCommand, setColor } from "./utils/helpers.js";
-import { botId, getDynamicDate } from "./formatting/constants.js";
-import {
-  HelixBanUserRequest,
-  UserIdResolvable,
-  HelixBanUser,
-  HelixUser,
-  UserNameResolvable,
-  extractUserName,
-  HelixChatUserColor,
-  HelixChannelApi,
-  HelixChatApi,
-  extractUserId,
-} from "@twurple/api";
-import { getEventMessages } from "./formatting/loadJSON.js";
+import { authProvider } from "./modules/auth.js";
 import registerChatClientEvents from "./modules/events.js";
-import { promises } from "dns";
-// import { getLocalizedMessages } from "./formatting/loadJSON.js";
 
 // **@chatClient declaration */
 /**
