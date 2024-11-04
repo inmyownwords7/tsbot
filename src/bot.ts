@@ -63,7 +63,6 @@ async function bot(): Promise<void> {
     await loadChatUserData();
     registerChatClientEvents(chatClient);
     chatClient.connect(); // Wait for the connection to succeed
-    console.log("Connected to Twitch chat");
   } catch (err) {
     console.error("Failed to connect to Twitch chat:", err);
     return;

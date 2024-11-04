@@ -1,6 +1,6 @@
 {
-    "accessToken": "4lyfikode9r892m6nyag2ku7itod0l",
-    "refreshToken": "fyjo37wgl02sq0179n3jii0lqx3udbvafc0qt39mvbosgw34o0",
+    "accessToken": "yw0s6scvwi60biif89vfk5asqck4ww",
+    "refreshToken": "23q7zze9rokdc8rh7w6y43kqidmrhq7didkonc4inst7irfy4x",
     "scope": [
         "analytics:read:extensions",
         "analytics:read:games",
@@ -65,6 +65,6 @@
         "whispers:edit",
         "whispers:read"
     ],
-    "expiresIn": 14958,
-    "obtainmentTimestamp": 1730298095336
+    "expiresIn": 14478,
+    "obtainmentTimestamp": 1730652394842
 }

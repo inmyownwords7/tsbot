@@ -12,7 +12,22 @@ import { UserIdResolvable, AuthProvider } from "@twurple/api";
 declare global {
   // Log color and badge type enums
   type LogColor = "red" | "blue" | "green" | "yellow" | "magenta" | "cyan";
-  type BadgeType = "moderator" | "deputy" | "vip" | "pleb" | "subscriber";
+  type BadgeType = "streamer" | "moderator" | "deputy" | "vip" | "pleb" | "subscriber";
+
+  interface PermissionRights {
+    permissionLevel: number;
+    canBan?: boolean;
+    canTimeout?: boolean;
+    canSendMessage?: boolean;
+    canUseCommands?: boolean;
+    canAccessSubOnlyContent?: boolean;
+  }
+
+  interface consoleMarkupInterface  {
+    log(color: LogColor, message: string): void;
+    debug(color: LogColor, message: string): void;
+  }
+
   // Subscription Types
   type SubscriptionType =
     | "new"
@@ -22,20 +37,9 @@ declare global {
     | "communityPayForward"
     | "subgift";
 
-  // Color keys for different roles or events
-  // type ColorKeys =
-  //   | "tfblade"
-  //   | "iwdominate"
-  //   | "akanemko"
-  //   | "perkz_lol"
-  //   | "magenta"
-  //   | "cyan"
-  //   | "white"
-  //   | "gray"
-  //   | "defaultColor";
-
+  type UserGroup = "isParty" | "isStaff" | "isDeputy" | "isEntitled" | "isPermitted";
   // MetaData Interface for chat message details
-  interface GroupMetaData {
+  interface GroupMetaData extends UserData {
     isParty?: boolean;
     isStaff?: boolean;
     isDeputy?: boolean;
@@ -43,12 +47,18 @@ declare global {
     isPermitted?: boolean;
   }
 
-  interface BadgesAndEmotes extends UserData{
+  interface ExtendedGroupMetaData extends GroupMetaData {
+    role?: string; // e.g., 'admin', 'moderator', 'member'
+    permissions?: Array<string>; // e.g., ['read', 'write', 'execute']
+    createdAt?: Date; // track when the group or permissions were created
+    updatedAt?: Date; // track when the metadata was last updated
+  }
+
+  interface BadgesAndEmotes extends UserData {
     badges?: Map<string, string>;
     emotes?: Map<string, string>;
   }
-  // Remove ChatClient Interface to avoid conflict with Twurple's ChatClient
-
+ 
   // Event Interfaces for Twitch events
   interface MessageEvent {
     channel: string;
@@ -95,8 +105,8 @@ declare global {
     isVip?: boolean;
     isBroadcaster?: boolean;
     isSubscriber?: boolean;
-    userName: string;
-    userId: string;
+    userName?: string;
+    userId?: string;
     isFounder?: boolean;
     channelId?: string | undefined;
     color?: string | undefined;
@@ -147,7 +157,7 @@ declare global {
 
   // Metadata Interface for detailed message metadata
   interface MessageMetaData {
-    messages: Array<{
+    messages?: Array<{
       timestamp: Date;
       msgId: string;
       messageContent: string;
@@ -211,4 +221,4 @@ declare module "@bot/*";
 declare module "@utils/*";
 declare module "@components/*";
 
-export {};
+export { };

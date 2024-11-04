@@ -345,11 +345,14 @@ async function saveChatMessageData(
   client: ChatMessage
 ): Promise<void> {
   try {
-    const userId: string = metadata.userId;
+    const userId = metadata.userId ?? "";
     let userData = userDataMap?.get(userId) || { ...metadata, messages: [] };
+    if (!userData.messages) {
+      userData.messages = [];
+    }
     userData.messages.push({
       timestamp: new Date(),
-      messageContent: metadata.messages[0]?.messageContent || "Default message",
+      messageContent: metadata.messages?.[0]?.messageContent || "",
       msgId: client.id,
     });
 
