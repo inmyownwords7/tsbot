@@ -23,7 +23,7 @@ declare global {
     canAccessSubOnlyContent?: boolean;
   }
 
-  interface consoleMarkupInterface  {
+  interface consoleMarkupInterface {
     log(color: LogColor, message: string): void;
     debug(color: LogColor, message: string): void;
   }
@@ -58,7 +58,7 @@ declare global {
     badges?: Map<string, string>;
     emotes?: Map<string, string>;
   }
- 
+
   // Event Interfaces for Twitch events
   interface MessageEvent {
     channel: string;
@@ -213,6 +213,34 @@ declare global {
 
   interface EventMessages {
     [channel: string]: ChannelEvents; // Dynamic key for each channel (e.g., "tfblade", "iwdominate")
+  }
+
+  interface ResubEvent {
+    channel: string;
+    user: string;
+    subInfo: ChatSubInfo;
+    msg: UserNotice;
+  }
+
+  interface CommunitySubEvent {
+    channel: string;
+    gifterName: string;
+    giftInfo: ChatCommunitySubInfo;
+    msg: UserNotice
+  }
+
+  interface SubGiftEvent {
+    channel: string;
+    user: string;
+    subGiftInfo: ChatSubInfo;
+    msg: UserNotice;
+  }
+
+  interface SubEvent {
+    channel: string;
+    user: string;
+    subInfo: ChatSubInfo;
+    msg: UserNotice
   }
 }
 

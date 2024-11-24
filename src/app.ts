@@ -2,12 +2,12 @@
 import express, { Request, Response, NextFunction } from "express";
 import morgan from "morgan";
 import dotenv from "dotenv";
-import {bot} from "./bot.js"
+import { bot } from "./bot.js"
 import { logHttpRequest } from "./modules/logger.js";
 
 dotenv.config();
 const app = express();
-const port: number = Number(process.env.PORT) || 29800;
+const port: number = Number(process.env.PORT) || 29801;
 
 app.use(
   morgan("combined", {

@@ -7,22 +7,73 @@ import { channelsMap } from "../utils/async config.js";
 import { botId } from "../formatting/constants.js";
 import { chatClient } from "../bot.js";
 import { eventSubListener } from "./auth.js";
-const event = new EventEmitter();
+
+/**
+ * Description placeholder
+ * @date 1:37:46 pm
+ *
+ * @type {UserData}
+ */
+let commandMessageData: UserData = {
+  isMod: false,
+  isVip: false,
+  isBroadcaster: false,
+  isSubscriber: false,
+  userName: "",
+  userId: "",
+  isFounder: false,
+  channelId: "",
+  color: ""
+}
+/**
+ * Description placeholder
+ * @date 10:40:47 am
+ *
+ * @type {*}
+ */
+const event: EventEmitter = new EventEmitter({ captureRejections: true });
+/**
+ * Description placeholder
+ * @date 10:40:47 am
+ *
+ * @type {string[]}
+ */
 const metadataParts: string[] = [];
 
 // Event handlers without getEventMessages
+/**
+ * Events are received from the event.emit()
+ * chat
+ * @date 10:40:47 am
+ *
+ * @async
+ * @param {EventEmitter} event
+ * @returns {Promise<void>}
+ */
 async function eventHandlers(event: EventEmitter): Promise<void> {
   event.on("message", async ({ channel, user, text, msg }: MessageEvent) => {
-    let { userId, isBroadcaster, isMod, isVip, isSubscriber } = msg.userInfo;
+    let { color, userId, isBroadcaster, isMod, isVip, isSubscriber, isFounder } = msg.userInfo;
+    let { channelId } = msg
     const roles = [
       { role: "self", condition: userId === botId },
+      { role: "founder", condition: isFounder },
       { role: "broadcaster", condition: isBroadcaster },
       { role: "moderator", condition: isMod },
       { role: "vip", condition: isVip },
       { role: "subscriber", condition: isSubscriber },
       { role: "pleb", condition: true },
     ];
-
+    commandMessageData = {
+      isMod,
+      isVip,
+      isBroadcaster,
+      isSubscriber,
+      userName: user,
+      userId,
+      isFounder,
+      channelId: channelId || undefined,
+      color: color || undefined
+    }
     metadataParts.length = 0;
     for (const { role, condition } of roles) {
       if (condition) {
@@ -30,6 +81,10 @@ async function eventHandlers(event: EventEmitter): Promise<void> {
         break;
       }
     }
+    // console.log(msg.userInfo.badgeInfo)
+    // console.log(msg.userInfo.badges)
+    // console.log("This is the message: " + msg)
+    // executeCommand(channel, user, text, msg, commandMessageData)
     const roleString = metadataParts.join(", ");
     await logChannelMessage(channel, user, text, msg);
   });
@@ -38,7 +93,7 @@ async function eventHandlers(event: EventEmitter): Promise<void> {
     console.log(`User ${user} is banned from ${channel}`);
   });
 
-  event.on("timeout", async ({ channel, user, duration, msg }: TimeoutEvent) => {
+  event.on("timeout", async ({ channel, user, duration, msg: ClearChat }: TimeoutEvent) => {
     console.log(`User ${user} has been timed out in ${channel} for ${duration} seconds`);
   });
 
@@ -98,60 +153,157 @@ async function eventHandlers(event: EventEmitter): Promise<void> {
     console.log(`Token success: ${token}`);
   });
 
-  event.on("onSub", async ({ channel, user, subInfo, msg, streak }) => {
-    const months: string | number = subInfo?.months || 0;
-    const isPrime: string = subInfo?.isPrime || false;
-    console.log("Is a prime sub: "+isPrime)
-    if (isPrime) {
-      chatClient.say(channel, `Thank you @${user} for subscribing with a prime sub to the elderly iwdOld ${channel}: for ${months} month`)
-    }
-    else if (months === 1) {
-      console.log(`${user} subscribed in ${channel}: for ${months} month`);
-      chatClient.say(channel, `Thank you @${user} for subscribing to the elderly iwdOld ${channel}: for ${months} month`)
-    } else {
-      console.log(`${user} subscribed in ${channel}: for ${months}`);
-      chatClient.say(channel, `Thank you @${user} for subscribing to the elderly iwdOld ${channel}: for ${months} month`)
-    }
-  });
-
-  event.on("onSubGift", async ({ channel, user, subGiftInfo, msg }) => {
-    let giftCounts = new Map<string | undefined, number>();
-    let gifter = subGiftInfo.gifter
-    let recipient = subGiftInfo
-    let previousGiftCount = giftCounts.get(gifter) ?? 0;
-    console.log(`${gifter} gifted a subscription to ${recipient}`);
-    if (previousGiftCount > 0) {
-      giftCounts.set(gifter, previousGiftCount - 1);
-    } else {
-      chatClient.say(channel, `Thanks ${gifter} for gifting a sub to ${recipient}!`);
-    }
-  });
-
-  event.on("onCommunitySub", async ({ channel, user, communitySubInfo, msg }) => {
-    console.log(`Community subscription by ${user} in ${channel}`);
-    chatClient.say(channel, `Community subscription by ${user} in ${channel}`)
-  });
-
-  event.on("onCommunitySubGift", async ({ channel, user, communitySubGiftInfo, msg }) => {
-    console.log(`Community subscription gift by ${user} in ${channel}`);
-    chatClient.say(channel, `Community subscription gift by ${user} in ${channel}`)
-  });
-
-  event.on("Resub", async ({channel, user, subInfo, msg}) => {
-    let streak: Number = subInfo?.streak
-    console.log(`User ${user} resubscribed in ${channel}`);
-    chatClient.say(channel, `User ${user} resubscribed in ${channel}`)
-  });
-
   event.on("join", ({ channel, user }) => {
     console.log(`${user} has joined ${channel}`);
   });
-  
+}
+
+async function eventSubscriptionHandlers(event: EventEmitter): Promise<void> {
+  const giftCounts: Map<string, number> = new Map();
+  event.on("onSub", async ({ channel, user, subInfo }: SubEvent) => {
+    const months: number = subInfo?.months ?? 0;
+    const isPrime: boolean = subInfo?.isPrime ?? false;
+    const streak: number | undefined = subInfo?.streak; // streak remains number | undefined
+    // Message Templates
+    const messages = {
+      prime: (user: string, months: number) =>
+        `Thank you @${user} for subscribing with a Prime sub to the elderly iwdOld ${channel} for ${months} month${months > 1 ? "s" : ""}!`,
+      streakPrime: (user: string, streak: number, months: number) =>
+        `Thank you @${user} for subscribing with a streak Prime sub for ${streak} month${streak > 1 ? "s" : ""} to the elderly iwdOld ${channel}! (Total: ${months} month${months > 1 ? "s" : ""})`,
+      normal: (user: string, months: number) =>
+        `Thank you @${user} for subscribing to the elderly iwdOld ${channel} for ${months} month${months > 1 ? "s" : ""}!`,
+      streakNormal: (user: string, streak: number, months: number) =>
+        `Thank you @${user} for subscribing with a streak of ${streak} month${streak > 1 ? "s" : ""} to the elderly iwdOld ${channel}! (Total: ${months} month${months > 1 ? "s" : ""})`,
+      zeroMonthsPrime: (user: string) =>
+        `Thank you @${user} for subscribing with a Prime sub to the elderly iwdOld ${channel}! Your support means a lot!`,
+      zeroMonthsNormal: (user: string) =>
+        `Thank you @${user} for subscribing to the elderly iwdOld ${channel}! Your support means a lot!`,
+    };
+
+    // Determine Message and Logging
+    if (months === 0) {
+      if (isPrime) {
+        // Prime subscription with 0 months
+        console.log(`[Subscription] ${user} subscribed with a Prime sub in ${channel} (0 months, possibly new).`);
+        chatClient.say(channel, messages.zeroMonthsPrime(user));
+      } else {
+        // Normal subscription with 0 months
+        console.log(`[Subscription] ${user} subscribed in ${channel} (0 months, possibly new).`);
+        chatClient.say(channel, messages.zeroMonthsNormal(user));
+      }
+    } else if (isPrime && streak) {
+      // Prime subscription with streak
+      console.log(`[Subscription] ${user} has a Prime streak sub in ${channel} for ${streak} month(s) (Total: ${months} month(s)).`);
+      chatClient.say(channel, messages.streakPrime(user, streak, months));
+    } else if (isPrime) {
+      // Prime subscription without streak
+      console.log(`[Subscription] ${user} subscribed with Prime in ${channel} for ${months} month(s).`);
+      chatClient.say(channel, messages.prime(user, months));
+    } else if (streak) {
+      // Normal subscription with streak
+      console.log(`[Subscription] ${user} subscribed normally in ${channel} with a streak of ${streak} month(s) (Total: ${months} month(s)).`);
+      chatClient.say(channel, messages.streakNormal(user, streak, months));
+    } else {
+      // Normal subscription without streak
+      console.log(`[Subscription] ${user} subscribed normally in ${channel} for ${months} month(s).`);
+      chatClient.say(channel, messages.normal(user, months));
+    }
+  });
+
+  event.on("onSubGift", async ({ channel, user, subGiftInfo, msg }: SubGiftEvent) => {
+    const gifter = user || "Anonymous";
+    const recipient = subGiftInfo?.displayName || "unknown recipient";
+    const previousGiftCount = giftCounts.get(gifter) ?? 0;
+
+    if (previousGiftCount > 0) {
+      // Update gift count
+      giftCounts.set(gifter, previousGiftCount - 1);
+    }
+    console.log(`[SubGift] ${gifter} gifted a subscription to ${recipient} in ${channel}.`);
+    chatClient.say(
+      channel,
+      `Thanks ${gifter} for gifting a sub to ${recipient} and supporting the elderly iwdOld!`
+    );
+  });
+
+  event.on("onCommunitySub", async ({ channel, gifterName, giftInfo, msg }: CommunitySubEvent) => {
+    const previousGiftCount = giftCounts.get(gifterName) ?? 0;
+    giftCounts.set(gifterName, previousGiftCount + giftInfo.count);
+    chatClient.say(channel, `Thank you @${gifterName} for gifting ${giftInfo.count} subs to support the elderly iwdOld!`);
+  });
+
+  event.on("onResub", async ({ channel, user, subInfo, msg }: ResubEvent) => {
+    const months: number = subInfo?.months ?? 0;
+    const isPrime: boolean = subInfo?.isPrime ?? false;
+    const streak: number | undefined = subInfo?.streak; // streak remains number | undefined
+    // Message Templates
+    const messages = {
+      prime: (user: string, months: number) =>
+        `Thank you @${user} for subscribing with a Prime sub to the elderly iwdOld ${channel} for ${months} month${months > 1 ? "s" : ""}!`,
+      streakPrime: (user: string, streak: number, months: number) =>
+        `Thank you @${user} for subscribing with a streak Prime sub for ${streak} month${streak > 1 ? "s" : ""} to the elderly iwdOld ${channel}! (Total: ${months} month${months > 1 ? "s" : ""})`,
+      normal: (user: string, months: number) =>
+        `Thank you @${user} for subscribing to the elderly iwdOld ${channel} for ${months} month${months > 1 ? "s" : ""}!`,
+      streakNormal: (user: string, streak: number, months: number) =>
+        `Thank you @${user} for subscribing with a streak of ${streak} month${streak > 1 ? "s" : ""} to the elderly iwdOld ${channel}! (Total: ${months} month${months > 1 ? "s" : ""})`,
+      zeroMonthsPrime: (user: string) =>
+        `Thank you @${user} for subscribing with a Prime sub to the elderly iwdOld ${channel}! Your support means a lot!`,
+      zeroMonthsNormal: (user: string) =>
+        `Thank you @${user} for subscribing to the elderly iwdOld ${channel}! Your support means a lot!`,
+    };
+
+    // Determine Message and Logging
+    if (months === 0) {
+      if (isPrime) {
+        // Prime subscription with 0 months
+        console.log(`[Subscription] ${user} subscribed with a Prime sub in ${channel} (0 months, possibly new).`);
+        chatClient.say(channel, messages.zeroMonthsPrime(user));
+      } else {
+        // Normal subscription with 0 months
+        console.log(`[Subscription] ${user} subscribed in ${channel} (0 months, possibly new).`);
+        chatClient.say(channel, messages.zeroMonthsNormal(user));
+      }
+    } else if (isPrime && streak) {
+      // Prime subscription with streak
+      console.log(`[Subscription] ${user} has a Prime streak sub in ${channel} for ${streak} month(s) (Total: ${months} month(s)).`);
+      chatClient.say(channel, messages.streakPrime(user, streak, months));
+    } else if (isPrime) {
+      // Prime subscription without streak
+      console.log(`[Subscription] ${user} subscribed with Prime in ${channel} for ${months} month(s).`);
+      chatClient.say(channel, messages.prime(user, months));
+    } else if (streak) {
+      // Normal subscription with streak
+      console.log(`[Subscription] ${user} subscribed normally in ${channel} with a streak of ${streak} month(s) (Total: ${months} month(s)).`);
+      chatClient.say(channel, messages.streakNormal(user, streak, months));
+    } else {
+      // Normal subscription without streak
+      console.log(`[Subscription] ${user} subscribed normally in ${channel} for ${months} month(s).`);
+      chatClient.say(channel, messages.normal(user, months));
+    }
+    if (streak) {
+      console.log(`[Resub] ${user} resubscribed in ${channel} for ${months} months with a streak of ${streak} months.`);
+      chatClient.say(
+        channel,
+        `Thank you @${user} for resubscribing for ${months} months with a streak of ${streak} months!`
+      );
+    } else {
+      console.log(`[Resub] ${user} resubscribed in ${channel} for ${months} months.`);
+      chatClient.say(channel, `Thank you @${user} for resubscribing for ${months} months!`);
+    }
+  });
 }
 
 
 // Register ChatClient Events
-async function registerChatClientEvents(chatClient: ChatClient) {
+/**
+ * Description placeholder
+ * @date 10:40:47 am
+ *
+ * @async
+ * @param {ChatClient} chatClient
+ * @returns {*}
+ */
+async function registerChatClientEvents(chatClient: ChatClient): Promise<void> {
   chatClient.onMessage((channel, user, text, msg) => {
     event.emit("message", { channel, user, text, msg });
   });
@@ -174,18 +326,24 @@ async function registerChatClientEvents(chatClient: ChatClient) {
 
   chatClient.onAction((channel, user, text, msg) => {
     event.emit("action", { channel, user, text, msg });
-
   });
 
+  // Call other event functions
   await connectionEvents(chatClient);
-  if (channelsMap.get("iwdominate")?.shouldThankSubscription) {
-    await subEvents(chatClient);
-  }
+  await subEvents(chatClient);
   await channelEvents(chatClient);
   await eventHandlers(event);
-  
+  await eventSubscriptionHandlers(event);
 }
 
+/**
+ * Description placeholder
+ * @date 10:40:47 am
+ *
+ * @async
+ * @param {ChatClient} chatClient
+ * @returns {Promise<void>}
+ */
 async function connectionEvents(chatClient: ChatClient): Promise<void> {
   chatClient.onJoin((channel, user) => {
     event.emit("join", { channel, user });
@@ -198,7 +356,6 @@ async function connectionEvents(chatClient: ChatClient): Promise<void> {
 
   chatClient.onConnect(() => {
     event.emit("connect")
-    // console.log("Connected to Twitch");
   });
 
   chatClient.onPart((channel, user) => {
@@ -207,38 +364,73 @@ async function connectionEvents(chatClient: ChatClient): Promise<void> {
   });
 }
 
+/**
+ * Description placeholder
+ * @date 10:40:46 am
+ *
+ * @async
+ * @param {ChatClient} chatClient
+ * @returns {Promise<void>}
+ */
 async function subEvents(chatClient: ChatClient): Promise<void> {
+  /**
+   * @description "subInfo.count" = "total count of gifts"
+   * @description "subInfo.streak" = "is there a streak or not with a number"
+   * @description "subInfo.isPrime" = "is it a prime sub?"
+   */
+
   let giftCounts: Map<string, undefined | number> = new Map();
   chatClient.onSub((channel, user, subInfo, msg) => {
-    let streak = subInfo.streak
-    console.log()
-    event.emit("onSub", { channel, user, subInfo, msg, streak });
+    console.log(`onSub event triggered for user: ${user} in channel: ${channel}`);
+    const isSubscribingEnabled: Boolean = channelsMap.get(channel)?.shouldThankSubscription ?? false
+    if (isSubscribingEnabled) {
+      event.emit("onSub", { channel, user, subInfo, msg });
+    } else {
+      console.log(`${user} subscribed in ${channel}: for ${subInfo.months} month`)
+    }
+
   });
 
   chatClient.onResub((channel, user, subInfo, msg) => {
-    event.emit("resub", { channel, user, subInfo, msg });
+    console.log(`onSub event triggered for user: ${user} in channel: ${channel}`);
+    const isSubscribingEnabled: Boolean = channelsMap.get(channel)?.shouldThankSubscription ?? false
+    if (isSubscribingEnabled) {
+      event.emit("onResub", { channel, user, subInfo, msg });
+    } else {
+      console.log(`${user} subscribed in ${channel}: for ${subInfo.months} month`)
+    }
   });
 
   chatClient.onSubGift((channel, user, subInfo, msg) => {
-    // subInfo.displayName
-    // subInfo.gifter
-    event.emit("onSubGift", { channel, user, subInfo, msg });
+    const isSubscribingEnabled: Boolean = channelsMap.get(channel)?.shouldThankSubscription ?? false
+    if (isSubscribingEnabled) {
+      event.emit("onSubGift", { channel, user, subInfo, msg });
+    } else {
+      console.log(`${user} gifted a sub to ${subInfo.displayName} in ${channel}`)
+    }
   });
 
   chatClient.onCommunitySub((channel, user, subInfo, msg) => {
-    let { gifter, count } = subInfo
-    if (!gifter) {
-      gifter = user;
+    let gifter
+    console.log(`onSub event triggered for user: ${user} in channel: ${channel}`);
+    const isSubscribingEnabled: Boolean = channelsMap.get(channel)?.shouldThankSubscription ?? false
+  
+    if (isSubscribingEnabled) {
+      event.emit("onCommunitySub", { channel, user, subInfo, msg, gifter, giftCounts });
+    } else {
+      console.log(`${gifter} gifted a sub to ${user} in ${channel}`)
     }
-
-    const previousGiftCount = giftCounts.get(gifter) ?? 0;
-    giftCounts.set(gifter, previousGiftCount + count);
-    console.log()
-    event.emit("onCommunitySub", { channel, user, subInfo, msg, gifter, count, giftCounts });
   });
-
 }
 
+/**
+ * Description placeholder
+ * @date 10:40:46 am
+ *
+ * @async
+ * @param {ChatClient} chatClient
+ * @returns {Promise<void>}
+ */
 async function channelEvents(chatClient: ChatClient): Promise<void> {
   chatClient.onChatClear((channel, msg) => {
     event.emit("clear", { channel, msg });
@@ -272,29 +464,23 @@ async function channelEvents(chatClient: ChatClient): Promise<void> {
     event.emit("uniquemode", { channel, enabled });
   });
 }
-
 eventSubListener.onChannelBan(botId, (event) => {
   console.log('Ban event:', event);
 });
-// async function handleEventMessage(eventType: string, channel: string, chatClient: ChatClient, user?: string ,additionalInfo?: any) {
-//   let message = "";
-//   switch (eventType) {
-//     case "newSub":
-//       message = `${user} has subscribed to ${channel} for ${additionalInfo?.months} months! Thank you!`;
-//       break;
-//     case "onSub":
-//       message = `${user} subscribed in ${channel} for ${additionalInfo?.months} months! Welcome aboard!`;
-//       break;
-//     case "onSubGift":
-//       message = `${user} gifted a subscription in ${channel}! Thank you for your generosity!`;
-//       break;
-//     case "onCommunitySub":
-//       message = `${user} gifted multiple subscriptions in ${channel}! Much appreciated!`;
-//       break;
-//   }
+function getRoles(userInfo: any, botId: string): string[] {
+  return [
+    { role: "self", condition: userInfo.userId === botId },
+    { role: "founder", condition: userInfo.isFounder },
+    { role: "broadcaster", condition: userInfo.isBroadcaster },
+    { role: "moderator", condition: userInfo.isMod },
+    { role: "vip", condition: userInfo.isVip },
+    { role: "subscriber", condition: userInfo.isSubscriber },
+    { role: "pleb", condition: true },
+  ]
+    .filter((entry) => entry.condition)
+    .map((entry) => entry.role);
+}
 
-//   if(message) {
-//     chatClient.say(channel, message)
-//   }
-// }
+export { event }
 export default registerChatClientEvents
+
