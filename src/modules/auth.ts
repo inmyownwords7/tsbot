@@ -1,72 +1,154 @@
-// authProviderSetup.ts
-
+import { AccessToken } from '@twurple/auth';
 import { botId } from "../formatting/constants.js";
-import { RefreshingAuthProvider, fs } from "../index.js";
+import { RefreshingAuthProvider } from "../index.js";
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { ApiClient } from "@twurple/api";
+import { readFile, writeFile } from "fs/promises";
 
+/**
+ * Description placeholder
+ * @date 10:30:53 am
+ *
+ * @interface AuthConfig
+ * @typedef {AuthConfig}
+ */
 interface AuthConfig {
+  /**
+   * Description placeholder
+   * @date 10:30:53 am
+   *
+   * @type {string}
+   */
   clientId: string;
+  /**
+   * Description placeholder
+   * @date 10:30:53 am
+   *
+   * @type {string}
+   */
   clientSecret: string;
 }
 
-const promises = fs.promises;
+/**
+ * Description placeholder
+ * @date 10:30:53 am
+ *
+ * @type {*}
+ */
+
+/**
+ * Description placeholder
+ * @date 10:30:52 am
+ *
+ * @type {AuthConfig}
+ */
 const credentials: AuthConfig = {
   clientId: "k3kjal6wl67bmcm0avngpkpnikaseh",
   clientSecret: "ybmuwh1pqyk7alcwchyyqwydvd8jjj",
 };
 
+/**
+ * Description placeholder
+ * @date 10:30:52 am
+ *
+ * @type {string}
+ */
 const userId: string = "132881296";
-const authProvider = new RefreshingAuthProvider(credentials);
+/**
+ * Description placeholder
+ * @date 10:30:52 am
+ *
+ * @type {*}
+ */
+const authProvider: RefreshingAuthProvider = new RefreshingAuthProvider(credentials);
 
-const initializeAuthProvider = async () => {
-  const tokenData = JSON.parse(
-    await promises.readFile(`./tokens.${botId}.json`, "utf-8")
-  );
-
-  // Add token with required intents: chat, api, and eventsub
-  await authProvider.addUserForToken(tokenData, ['chat', 'api', 'eventsub']);
-
-  // Listen for token refreshes and update the token file
-  authProvider.onRefresh(async (userId, newTokenData) => {
-    await promises.writeFile(
-      `./tokens.${userId}.json`,
-      JSON.stringify(newTokenData, null, 4),
-      "utf-8"
+/**
+ * Description placeholder
+ * @date 10:30:52 am
+ *
+ * @async
+ * @returns {*}
+ */
+const initializeAuthProvider = async (): Promise<void> => {
+  try {
+    const tokenData: AccessToken = JSON.parse(
+      await readFile(`./tokens.${botId}.json`, "utf-8")
     );
-  });
-};
 
-// Initialize authProvider first
-await initializeAuthProvider()
-  .then(() => console.log("AuthProvider initialized successfully"))
-  .catch((err) => {
-    console.error("An error occurred during initialization:", err);
+    // Add token with required intents: chat, api, and eventsub
+    await authProvider.addUserForToken(tokenData, ['chat', 'api', 'eventsub']);
+
+    // Listen for token refreshes and update the token file
+    authProvider.onRefresh(async (userId: string, newTokenData: AccessToken) => {
+      await writeFile(
+        `./tokens.${userId}.json`,
+        JSON.stringify(newTokenData, null, 4),
+        "utf-8"
+      );
+    });
+  } catch (error) {
+    console.error("Error initializing AuthProvider:", error);
     process.exit(1);
-  });
+  }
+};
+try {
+  // Initialize authProvider first
+  await initializeAuthProvider();
+  console.log("AuthProvider initialized successfully");
+} catch (err) {
+  console.error("An error occurred during initialization:", err);
+  process.exit(1);
+}
 
 // Set up the ApiClient with the initialized authProvider
-const api = new ApiClient({ authProvider });
+/**
+ * Description placeholder
+ * @date 10:30:52 am
+ *
+ * @type {*}
+ */
+const api: ApiClient = new ApiClient({ authProvider });
 
 // Set up the EventSub WebSocket listener with the ApiClient
-const eventSubListener = new EventSubWsListener({ apiClient: api,
-  url: 'ws://127.0.0.1:8080/ws' 
+/**
+ * Description placeholder
+ * @date 10:30:52 am
+ *
+ * @type {*}
+ */
+const eventSubListener: EventSubWsListener = new EventSubWsListener({
+  apiClient: api,
+  url: 'ws://127.0.0.1:8080/ws'
 })
 
 // Function to start the listener and subscribe to the ban event
-const initializeEventSub = async () => {
+/**
+ * Description placeholder
+ * @date 10:30:52 am
+ *
+ * @async
+ * @returns {*}
+ */
+const initializeEventSub = async (): Promise<void> => {
   try {
     await eventSubListener.start();
     // eventSubListener.addListener('channel.ban', (event) => {
     //   console.log('Ban event received:', event);
     // });
     // //evenetSubListener.registerEvent()
- 
+
     console.log("Listening for ban events...");
   } catch (err) {
     console.error("An error occurred while starting EventSub listener:", err);
   }
 };
+
+// Handle SIGINT signal to gracefully stop the listener and exit the process
+process.on("SIGINT", async () => {
+  console.log("Shutting down...");
+  await eventSubListener.stop();
+  process.exit(0);
+});
 
 // Initialize EventSub listener
 await initializeEventSub();

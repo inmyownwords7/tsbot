@@ -28,5 +28,11 @@ const getTimeFormat = (): string => moment(STARTING_TIME).format('h:mm:ss a');
 const formattedStartTime: string = moment(STARTING_TIME).format('h:mm:ss a')
 // Function to get the current time
 const TIME_FORMAT = (): string => moment().format('h:mm:ss a');
-
-export {DATE_FORMAT, CHANNEL_DATA_PATH, CHATUSER_PATH, ERROR_MESSAGES, SUCCESS_MESSAGES, botId, TIME_FORMAT, STARTING_TIME, formattedStartTime, getDynamicDate, getTimeFormat, MESSAGES, EVENT_PATH};
+let ACTIVEUSERGROUPSIDS: string[] = ["439212677", "132881296", "65538724"]
+export {DATE_FORMAT, CHANNEL_DATA_PATH, 
+    CHATUSER_PATH, ERROR_MESSAGES, 
+    SUCCESS_MESSAGES, botId, TIME_FORMAT, 
+    STARTING_TIME, 
+    formattedStartTime, getDynamicDate, 
+    getTimeFormat, MESSAGES, 
+    EVENT_PATH, ACTIVEUSERGROUPSIDS};

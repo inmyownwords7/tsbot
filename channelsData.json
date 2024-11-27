@@ -1,83 +1,81 @@
 {
-  "channelsMap": {
-    "dataType": "Map",
-    "value": [
-      [
-        "tfblade",
-        {
-          "isForeignEnabled": false,
-          "shouldThankSubscription": false,
-          "toggleLog": true,
-          "logColor": "#FF7F50",
-          "isFlamingEnabled": false,
-          "toggleTempo": false,
-          "banCount": 1,
-          "messageDeletedCounter": 1,
-          "timeCounter": 1,
-          "subCounter": 1,
-          "accountUserAge": false,
-          "isKoreanEnabled": false
-        }
-      ],
-      [
-        "iwdominate",
-        {
-          "isForeignEnabled": false,
-          "shouldThankSubscription": true,
-          "toggleLog": true,
-          "logColor": "#FF7F50",
-          "isFlamingEnabled": false,
-          "toggleTempo": false,
-          "banCount": 1,
-          "messageDeletedCounter": 1,
-          "timeCounter": 1,
-          "subCounter": 1,
-          "accountUserAge": true,
-          "isKoreanEnabled": true
-        }
-      ],
-      [
-        "perkz_lol",
-        {
-          "isForeignEnabled": false,
-          "shouldThankSubscription": false,
-          "toggleLog": true,
-          "logColor": "defaultColor",
-          "isFlamingEnabled": false,
-          "toggleTempo": false,
-          "banCount": 1,
-          "messageDeletedCounter": 1,
-          "timeCounter": 1,
-          "subCounter": 1,
-          "accountUserAge": false,
-          "isKoreanEnabled": false
-        }
-      ],
-      [
-        "akanemsko",
-        {
-          "isForeignEnabled": false,
-          "shouldThankSubscription": false,
-          "toggleLog": true,
-          "logColor": "defaultColor",
-          "isFlamingEnabled": false,
-          "toggleTempo": false,
-          "banCount": 1,
-          "messageDeletedCounter": 1,
-          "timeCounter": 1,
-          "subCounter": 1,
-          "accountUserAge": false,
-          "isKoreanEnabled": false
-        }
-      ]
-    ]
-  },
-  "channelColors": {
-    "25653002": "#FF7F50",
-    "59308271": "#FF0000",
-    "tfblade": "",
-    "iwdominate": "#FF7F50",
-    "perkz_lol": "",
-    "akanemsko": ""
-  }
+    "channelsMap": {
+        "dataType": "Map",
+        "value": [
+            [
+                "tfblade",
+                {
+                    "isForeignEnabled": false,
+                    "shouldThankSubscription": false,
+                    "toggleLog": true,
+                    "logColor": "#FF7F50",
+                    "isFlamingEnabled": false,
+                    "toggleTempo": false,
+                    "banCount": 1,
+                    "messageDeletedCounter": 1,
+                    "timeCounter": 1,
+                    "subCounter": 1,
+                    "accountUserAge": false,
+                    "isKoreanEnabled": false
+                }
+            ],
+            [
+                "iwdominate",
+                {
+                    "isForeignEnabled": false,
+                    "shouldThankSubscription": true,
+                    "toggleLog": true,
+                    "logColor": "#FF7F50",
+                    "isFlamingEnabled": false,
+                    "toggleTempo": false,
+                    "banCount": 1,
+                    "messageDeletedCounter": 1,
+                    "timeCounter": 1,
+                    "subCounter": 1,
+                    "accountUserAge": true,
+                    "isKoreanEnabled": true
+                }
+            ],
+            [
+                "perkz_lol",
+                {
+                    "isForeignEnabled": false,
+                    "shouldThankSubscription": false,
+                    "toggleLog": true,
+                    "logColor": "defaultColor",
+                    "isFlamingEnabled": false,
+                    "toggleTempo": false,
+                    "banCount": 1,
+                    "messageDeletedCounter": 1,
+                    "timeCounter": 1,
+                    "subCounter": 1,
+                    "accountUserAge": false,
+                    "isKoreanEnabled": false
+                }
+            ],
+            [
+                "akanemsko",
+                {
+                    "isForeignEnabled": false,
+                    "shouldThankSubscription": false,
+                    "toggleLog": true,
+                    "logColor": "defaultColor",
+                    "isFlamingEnabled": false,
+                    "toggleTempo": false,
+                    "banCount": 1,
+                    "messageDeletedCounter": 1,
+                    "timeCounter": 1,
+                    "subCounter": 1,
+                    "accountUserAge": false,
+                    "isKoreanEnabled": false
+                }
+            ]
+        ]
+    },
+    "channelColors": {
+        "tfblade": "",
+        "iwdominate": "#FF7F50",
+        "perkz_lol": "",
+        "akanemsko": ""
+    }
 }

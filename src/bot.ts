@@ -72,4 +72,9 @@ async function bot(): Promise<void> {
 export async function join(chatClient: ChatClient): Promise<void> {
   chatClient.onJoin((channel, user) => {`${user} ${channel}`});
 }
+function handleMessage(channel: string, user: string, text: string, msg: any): any {
+
+}
+
+chatClient.onMessage(handleMessage)
 export { chatClient, bot };

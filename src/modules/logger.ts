@@ -222,8 +222,8 @@ let logChannelMessage = async (
   // console.warn(`logChannelMessagecalled for ${channel}: ${user}: ${text}` + " line 155 of logger.ts");
   let channelLoggerInstance = await initializeChannelLogger(channel, user, msg); // Create logger for each channel
   let logEntry: string = `${channel}: ${user}: ${text}`;
-  if(user != "nightbot") {
-  channelLoggerInstance.info(logEntry, metadata); // Log the message using the channel-specific logger
+  if (user != "nightbot") {
+    channelLoggerInstance.info(logEntry, metadata); // Log the message using the channel-specific logger
   }
 };
 
