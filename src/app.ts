@@ -1,19 +1,19 @@
-// import 'module-alias/register.js';
+import 'tsconfig-paths/register.js';
 import express, { Request, Response, NextFunction } from "express";
-import morgan from "morgan";
+// import morgan from "morgan";
 import dotenv from "dotenv";
 import { bot } from "./bot.js"
-import { logHttpRequest } from "./modules/logger.js";
+
 
 dotenv.config();
 const app = express();
 const port: number = Number(process.env.PORT) || 29801;
 
-app.use(
-  morgan("combined", {
-    stream: { write: (message: string) => logHttpRequest(message.trim()) },
-  })
-);
+// app.use(
+//   morgan("combined", {
+//     stream: { write: (message: string) => logHttpRequest(message.trim()) },
+//   })
+// );
 
 app.get("/", (req, res) => {
   res.send("Hello World!");
@@ -41,4 +41,4 @@ export async function main() {
   });
 }
 
-main();
+await main().catch(console.error);

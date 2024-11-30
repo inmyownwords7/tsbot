@@ -6,7 +6,7 @@
                 "tfblade",
                 {
                     "isForeignEnabled": false,
-                    "shouldThankSubscription": false,
+                    "shouldThankSubscription": true,
                     "toggleLog": true,
                     "logColor": "#FF7F50",
                     "isFlamingEnabled": false,
@@ -22,7 +22,7 @@
             [
                 "iwdominate",
                 {
-                    "isForeignEnabled": false,
+                    "isForeignEnabled": true,
                     "shouldThankSubscription": true,
                     "toggleLog": true,
                     "logColor": "#FF7F50",
@@ -71,11 +71,5 @@
                 }
             ]
         ]
-    },
-    "channelColors": {
-        "tfblade": "",
-        "iwdominate": "#FF7F50",
-        "perkz_lol": "",
-        "akanemsko": ""
     }
 }

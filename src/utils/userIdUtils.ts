@@ -13,7 +13,7 @@ import { ACTIVEUSERGROUPSIDS as activeUserGroupsIds } from '../formatting/consta
 /**
  * Retrieves the user ID from the given username using HelixUserApi#getUserByName.
  * @param {string} userName - The username to extract the ID from.
- * @returns {Promise<string | false | undefined>} - Returns the user ID or false if not found.
+ * @returns {Promise<HelixUser | null>} - Returns the user ID or false if not found.
  */
 async function getUserIdFromUsername(
     userName: string
@@ -40,13 +40,12 @@ async function getUserIdFromUsername(
     }
 }
 
-
-
   /**
  * Retrieves user IDs for an array of usernames using HelixUserApi#getUsersByNames.
  * @param {string[]} userNames - The list of usernames to extract IDs from.
  * @returns {Promise<string[] | false >} - Returns an array of user IDs or false if none found.
  */
+
  async function getUserIdsFromUsernames(
     userNames: string[]
   ): Promise<string[] | false | undefined> {
@@ -133,6 +132,7 @@ async function getUserNameFromUserId(
       } else {
         return false; // Return undefined if the API instance is not available
       }
+      
     } catch (error) {
       console.error(error);
       return false; // Return undefined in case of an error

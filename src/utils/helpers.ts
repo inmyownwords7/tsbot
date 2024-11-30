@@ -1,12 +1,11 @@
 import path from "path";
-import chalk, {ChalkInstance} from "chalk";
-import {roleToRoleColor} from "../modules/logger.js";
-import {channelsMap} from "./async config.js";
-import {getUserIdFromUsername, getUserNameFromUserId} from "./userIdUtils.js";
-import {botId} from "../formatting/constants.js";
-import {userId} from "../index.js";
-import {api} from "../modules/auth.js";
-import {HelixUser} from "@twurple/api";
+import chalk, { ChalkInstance } from "chalk";
+import { roleToRoleColor } from "../modules/logger.js";
+import { channelsMap } from "./async config.js";
+import { getUserIdFromUsername } from "./userIdUtils.js";
+import { botId } from "../formatting/constants.js";
+import { api } from "../modules/auth.js";
+import { HelixUser } from "@twurple/api";
 
 // let baseMessage: string = `${metadata.timestamp} ${metadataString} [CHAT ${level}]: ${message}`;
 
@@ -22,7 +21,7 @@ function isCommand(
         // Check if the text starts with the current command
         if (text.trim().toLowerCase().startsWith(command.toLowerCase())) {
             // Extract and return the arguments following the command as an array
-            const args = text.substring(command.length).trim().split(/\s+/); // Split by whitespace
+            const args: string[] = text.substring(command.length).trim().split(/\s+/); // Split by whitespace
             return args; // Return the arguments if found
         }
     }
@@ -115,6 +114,7 @@ function botUptime() {
 async function banUser(channel: string, user: string, duration: number, reason: string) {
     let channelId: HelixUser | null = await getUserIdFromUsername(channel)
     let userId: HelixUser | null = await getUserIdFromUsername(user);
+   
     if (!userId) {
         return;
     }

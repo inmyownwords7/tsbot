@@ -42,4 +42,4 @@ function getColor(logColor: string): ChalkInstance {
   return colorMap[logColor as LogColor] || chalk.cyan; // Default to cyan if logColor is invalid
 }
 
-export {colors, getColor, permissions}
+export { colors, getColor, permissions }
