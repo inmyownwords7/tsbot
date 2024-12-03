@@ -3,8 +3,11 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=dotenv,node
 
 ### dotenv ###
-.env
-
+.env*
+.flaskenv*
+!.env.project
+!.env.vault.env
+.env.vault
 ### Node ###
 # Logs
 logs
@@ -153,3 +156,6 @@ dist
 node_modules/
 package-lock.json
 node_modules/.package-lock.json
+
+
+!.env.vault

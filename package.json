@@ -48,6 +48,7 @@
     "chalk": "^5.3.0",
     "collections": "^5.1.13",
     "dotenv": "^16.4.5",
+    "dotenv-vault": "^1.26.2",
     "express": "^4.21.0",
     "module-alias": "^2.2.3",
     "promise-fs": "^2.1.1",

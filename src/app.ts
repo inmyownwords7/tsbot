@@ -1,11 +1,16 @@
 import 'tsconfig-paths/register.js';
+import 'dotenv-vault/config';
 import express, { Request, Response, NextFunction } from "express";
-// import morgan from "morgan";
-import dotenv from "dotenv";
+import dotenv from "dotenv"
 import { bot } from "./bot.js"
+import path from "path";
 
+path.dirname("/")
+dotenv.config({
+  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development',
+});
+console.log(process.env)
 
-dotenv.config();
 const app = express();
 const port: number = Number(process.env.PORT) || 29801;
 
