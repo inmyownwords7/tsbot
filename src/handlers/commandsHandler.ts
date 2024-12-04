@@ -1,11 +1,14 @@
 import XRegExp from "xregexp"
+import { ChatMessage } from "@twurple/chat";
 import { api } from "../modules/auth.js"
-import {banUser, isCommand, isValidUsername} from "../utils/helpers.js";
+import { banUser, isCommand, isValidUsername } from "../utils/helpers.js";
 import { getUserIdFromUsername } from "../utils/userIdUtils.js";
 import { botId } from "../formatting/constants.js";
-import { ChatMessage } from "@twurple/chat";
 import { channelsMap } from "../utils/async config.js";
-import {regexLang} from "../formatting/regexp.js";
+import { regexLang } from "@src/formatting/regexp.js";
+import { get } from "node_modules/axios/index.cjs";
+import { HelixUser } from "@twurple/api";
+
 let timeoutHistory = new Map<string, number>();
 let timeLastSentTimeoutMessage = new Date().getTime();
 
@@ -15,6 +18,15 @@ async function foreignLanguageHandler(
     text: string,
     msg: ChatMessage
 ): Promise<void | boolean> {
+    let { isMod, isSubscriber, isVip, isBroadcaster } = msg.userInfo
+
+    const staff: Staff = {
+        isMod: isMod,
+        isSubscriber: isSubscriber,
+        isVip: isVip,
+        isBroadcaster: isBroadcaster,
+    }
+
     // Early return for null/undefined text or excluded channels
     if (!text || channel === "akanemsko") {
         return false;
@@ -46,7 +58,7 @@ async function foreignLanguageHandler(
     if (foreignMatch) {
         console.log("Match found:", foreignMatch[0]);
     } else {
-        console.log("No blocked language detected.");
+        // console.log("No blocked language detected.");
     }
 
     // Base timeout duration
@@ -60,6 +72,10 @@ async function foreignLanguageHandler(
 
         // Skip if the user is a VIP
         if (msg?.userInfo?.isVip) {
+            return;
+        }
+
+        if (msg?.userInfo?.isMod) {
             return;
         }
 
@@ -102,65 +118,49 @@ async function timeoutHandler(
     text: string,
     user: string,
     msg: ChatMessage,
-    userMessageMetadata: UserData,
+    userMessageMetadata: UserData
 ) {
-
     if (!userMessageMetadata?.isMod) {
         console.error("Permission denied: User is not a moderator.");
         return;
     }
+    console.log(text)
 
-    let channels = Array.from(channelsMap.keys());
-    if (!channels.includes(channel)) return;
+    let args = isCommand("!timeout", text);
+    if (!args) return;
 
-    // Check for valid command and extract arguments
-    let args = isCommand("timeout", text);
+    const [targetUser, rawDuration, ...reasonParts] = args;
+    console.log(targetUser + " " + rawDuration + " " + reasonParts)
+    const duration = parseInt(rawDuration, 10) || 600; // Default to 600 seconds
+    const reason = reasonParts.join(" ");
 
-    if (!args) {
-        console.error(`Invalid or unrecognized command: ${text}`);
-        return;
-    }
-
-    // Validate and process arguments
-    let targetUser = args[0]; // Required: target user
     if (!isValidUsername(targetUser)) {
-        console.error("Error: Invalid or missing target user.");
+        console.error("Invalid or missing target user.");
         return;
     }
-
-    let duration = args[1] ? parseInt(args[1], 10) || 600 : 600; // Duration with fallback
-   
-    if (args[1] && isNaN(parseInt(args[1], 10))) {
-        console.warn(`Invalid duration provided: ${args[1]}, defaulting to 600.`);
+    let userObject: HelixUser | null = await getUserIdFromUsername(targetUser);
+    if(!userObject) {
+        return;
     }
-    
-    let reason = args.slice(2).join(" ") || ""; // Combine remaining arguments for reason
-    // Resolve channel ID
-    let channelId = msg?.channelId || (await getUserIdFromUsername(channel));
+    let id: string = userObject?.id
+    const channelId = msg?.channelId || (await getUserIdFromUsername(channel));
     if (!channelId) {
-        console.error("Error: Could not resolve channel ID.");
+        console.error("Failed to resolve channel ID.");
         return;
     }
 
-    // Log for debugging
-    console.log({
-        channel,
-        targetUser,
-        duration,
-        reason,
-        channelId,
-    });
+    console.log(`Timeout: ${targetUser} ${id} for ${duration}s. Reason: ${reason}`);
+
     try {
-        // Execute timeout
-        await api.asUser(botId, (ctx) => {
-            return ctx.moderation.banUser(channelId, {
-                duration: duration,
-                reason: reason,
-                user: targetUser,
-            });
-        });
+        await api.asUser(botId, (ctx) =>
+            ctx.moderation.banUser(channelId, {
+                user: id,
+                duration,
+                reason,
+            })
+        );
     } catch (error) {
-        console.error(`Failed to execute timeout for ${targetUser}:`, error)
+        console.error(`Failed to timeout ${targetUser}:`, error);
     }
 }
 

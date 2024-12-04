@@ -2,12 +2,11 @@ import { EventEmitter } from "events";
 import {
   ChatClient
 } from "@twurple/chat";
-import { logChannelMessage } from "./logger.js";
+import { logChannelMessage, systemLogger } from "./logger.js";
 import { channelsMap } from "../utils/async config.js";
-import { botId } from "../formatting/constants.js";
-import { chatClient } from "../bot.js";
+import { botId, getTimeFormat } from "../formatting/constants.js";
 import { eventSubListener } from "./auth.js";
-import {foreignLanguageHandler, timeoutHandler} from "../handlers/commandsHandler.js";
+import { foreignLanguageHandler, timeoutHandler } from "../handlers/commandsHandler.js";
 /**
  * Description placeholder
  * @date 1:37:46 pm
@@ -38,7 +37,7 @@ const event: EventEmitter = new EventEmitter({ captureRejections: true });
  *
  * @type {string[]}
  */
-const metadataParts: string[] = [];
+
 
 // Event handlers without getEventMessages
 /**
@@ -52,8 +51,52 @@ const metadataParts: string[] = [];
  */
 async function eventHandlers(event: EventEmitter): Promise<void> {
   event.on("message", async ({ channel, user, text, msg }: MessageEvent) => {
-    let { color, userId, isBroadcaster, isMod, isVip, isSubscriber, isFounder } = msg.userInfo;
-    let { channelId } = msg
+    const { color, userId, isBroadcaster, isMod, isVip, isSubscriber, isFounder } = msg.userInfo;
+    const { channelId } = msg;
+    const metadataParts: string[] = [];
+
+    try {
+      // Reset shared state
+      // metadataParts.length = 0; // Clear the array
+      commandMessageData = {
+        isMod,
+        isVip,
+        isBroadcaster,
+        isSubscriber,
+        userName: user,
+        userId,
+        isFounder,
+        channelId: channelId || undefined,
+        color: color || undefined
+      };
+
+      try {
+        await logChannelMessage(channel, user, text, msg);
+      } catch (error) {
+        console.error(`Error in logChannelMessage:`, error);
+      }
+
+      try {
+        await foreignLanguageHandler(channel, user, text, msg);
+      } catch (error) {
+        console.error(`Error in foreignLanguageHandler:`, error);
+      }
+    } catch (error) {
+      console.error(`Error processing message from ${user} in ${channel}:`, error);
+    }
+
+    // Filter messages for commands
+    if (!text.startsWith("!")) return; // Ignore non-command messages
+
+    const [command, ...args] = text.substring(1).split(" "); // Extract command and args
+    switch (command) {
+      case "timeout":
+        await timeoutHandler(channel, text, user, msg, commandMessageData);
+        break;
+      default:
+        console.log(`Unrecognized command: ${command}`);
+        break;
+    }
 
     const roles = [
       { role: "self", condition: userId === botId },
@@ -64,32 +107,14 @@ async function eventHandlers(event: EventEmitter): Promise<void> {
       { role: "subscriber", condition: isSubscriber },
       { role: "pleb", condition: true },
     ];
-    commandMessageData = {
-      isMod,
-      isVip,
-      isBroadcaster,
-      isSubscriber,
-      userName: user,
-      userId,
-      isFounder,
-      channelId: channelId || undefined,
-      color: color || undefined
-    }
-
-    if(!commandMessageData) {
-      return 
-    }
-
-    metadataParts.length = 0;
+   
     for (const { role, condition } of roles) {
       if (condition) {
         metadataParts.push(role);
-        break;
+        break; // Only assign the first matching role
       }
     }
-    await timeoutHandler(channel, user, text, msg, commandMessageData);
-    await logChannelMessage(channel, user, text, msg);
-    await foreignLanguageHandler(channel, user, text, msg);
+    // Handlers for logging and foreign language
   });
 
   event.on("ban", async ({ channel, user, msg }: BanEvent) => {
@@ -157,15 +182,16 @@ async function eventHandlers(event: EventEmitter): Promise<void> {
   });
 
   event.on("join", ({ channel, user }) => {
-    console.log(`${user} has joined ${channel}`);
+    // console.log(`${getTimeFormat()} ${user} has joined ${channel}`);
+    systemLogger.info(`${user} has joined ${channel}`);
   });
 }
 
 async function channelEventHandlers(event: EventEmitter) {
-  event.on("followersOnly", ({channel, enabled, delay}) => {
+  event.on("followersOnly", ({ channel, enabled, delay }) => {
 
   })
-} 
+}
 /**
  * Description placeholder
  * @date 10:29:02 am
@@ -179,122 +205,130 @@ async function eventSubscriptionHandlers(event: EventEmitter): Promise<void> {
   event.on("onSub", async ({ channel, user, subInfo }: SubEvent) => {
     const months: number = subInfo?.months ?? 0;
     const isPrime: boolean = subInfo?.isPrime ?? false;
-    const streak: number | undefined = subInfo?.streak; // streak remains number | undefined
+    const streak: number | undefined = subInfo?.streak;
+
     // Message Templates
-    const messages = {
-      prime: (user: string, months: number) =>
-        `Thank you @${user} for subscribing with a Prime sub to the elderly iwdOld ${channel} for ${months} month${months > 1 ? "s" : ""}!`,
-      streakPrime: (user: string, streak: number, months: number) =>
-        `Thank you @${user} for subscribing with a streak Prime sub for ${streak} month${streak > 1 ? "s" : ""} to the elderly iwdOld ${channel}! (Total: ${months} month${months > 1 ? "s" : ""})`,
-      normal: (user: string, months: number) =>
-        `Thank you @${user} for subscribing to the elderly iwdOld ${channel} for ${months} month${months > 1 ? "s" : ""}!`,
-      streakNormal: (user: string, streak: number, months: number) =>
-        `Thank you @${user} for subscribing with a streak of ${streak} month${streak > 1 ? "s" : ""} to the elderly iwdOld ${channel}! (Total: ${months} month${months > 1 ? "s" : ""})`,
-      zeroMonthsPrime: (user: string) =>
-        `Thank you @${user} for subscribing with a Prime sub to the elderly iwdOld ${channel}! Your support means a lot!`,
-      zeroMonthsNormal: (user: string) =>
-        `Thank you @${user} for subscribing to the elderly iwdOld ${channel}! Your support means a lot!`,
+    const generateMessage = (type: string, user: string, months: number, streak?: number) => {
+      const baseText = `Thank you @${user} for subscribing to the elderly iwdOld ${channel}`;
+      switch (type) {
+        case "prime":
+          return `${baseText} with a Prime sub for ${months} month${months > 1 ? "s" : ""}!`;
+        case "streakPrime":
+          return `${baseText} with a streak Prime sub for ${streak} month${streak! > 1 ? "s" : ""}! (Total: ${months} month${months > 1 ? "s" : ""})`;
+        case "normal":
+          return `${baseText} for ${months} month${months > 1 ? "s" : ""}!`;
+        case "streakNormal":
+          return `${baseText} with a streak of ${streak} month${streak! > 1 ? "s" : ""}! (Total: ${months} month${months > 1 ? "s" : ""})`;
+        case "zeroMonthsPrime":
+          return `${baseText} with a Prime sub! Your support means a lot!`;
+        case "zeroMonthsNormal":
+          return `${baseText}! Your support means a lot!`;
+        default:
+          return `${baseText}!`;
+      }
     };
 
-    // Determine Message and Logging
+    // Determine Message Type
+    let messageType: string;
+
     if (months === 0) {
-      if (isPrime) {
-        // Prime subscription with 0 months
-        console.log(`[Subscription] ${user} subscribed with a Prime sub in ${channel} (0 months, possibly new).`);
-        chatClient.say(channel, messages.zeroMonthsPrime(user));
-      } else {
-        // Normal subscription with 0 months
-        console.log(`[Subscription] ${user} subscribed in ${channel} (0 months, possibly new).`);
-        chatClient.say(channel, messages.zeroMonthsNormal(user));
-      }
-    } else if (isPrime && streak) {
-      // Prime subscription with streak
-      console.log(`[Subscription] ${user} has a Prime streak sub in ${channel} for ${streak} month(s) (Total: ${months} month(s)).`);
-      chatClient.say(channel, messages.streakPrime(user, streak, months));
+      messageType = isPrime ? "zeroMonthsPrime" : "zeroMonthsNormal";
     } else if (isPrime) {
-      // Prime subscription without streak
-      console.log(`[Subscription] ${user} subscribed with Prime in ${channel} for ${months} month(s).`);
-      chatClient.say(channel, messages.prime(user, months));
-    } else if (streak) {
-      // Normal subscription with streak
-      console.log(`[Subscription] ${user} subscribed normally in ${channel} with a streak of ${streak} month(s) (Total: ${months} month(s)).`);
-      chatClient.say(channel, messages.streakNormal(user, streak, months));
+      messageType = streak ? "streakPrime" : "prime";
     } else {
-      // Normal subscription without streak
-      console.log(`[Subscription] ${user} subscribed normally in ${channel} for ${months} month(s).`);
-      chatClient.say(channel, messages.normal(user, months));
+      messageType = streak ? "streakNormal" : "normal";
     }
+
+    const message = generateMessage(messageType, user, months, streak);
+
+    // Log and Send Message
+    console.log(`[Subscription] ${user} subscribed in ${channel}: ${message}`);
+    // chatClient.say(channel, message);
   });
 
+
+  // Helper function to update gift counts
+  const updateGiftCount = (gifter: string, count: number) => {
+    const previousCount = giftCounts.get(gifter) ?? 0;
+    const newCount = previousCount + count;
+    giftCounts.set(gifter, newCount);
+    return newCount;
+  };
+
+  // Event: Individual Sub Gift
   event.on("onSubGift", async ({ channel, user, subGiftInfo, msg }: SubGiftEvent) => {
     const gifter = user || "Anonymous";
     const recipient = subGiftInfo?.displayName || "unknown recipient";
-    const previousGiftCount = giftCounts.get(gifter) ?? 0;
 
+    // Log and send message
+    console.log(`[SubGift] ${gifter} gifted a subscription to ${recipient} in ${channel}.`);
+    // chatClient.say(
+    //   channel,
+    //   `Thanks ${gifter} for gifting a sub to ${recipient} and supporting the elderly iwdOld!`
+    // );
+
+    // Update gift count (decrement if necessary)
+    const previousGiftCount = giftCounts.get(gifter) ?? 0;
     if (previousGiftCount > 0) {
-      // Update gift count
       giftCounts.set(gifter, previousGiftCount - 1);
     }
-    console.log(`[SubGift] ${gifter} gifted a subscription to ${recipient} in ${channel}.`);
-    chatClient.say(
-      channel,
-      `Thanks ${gifter} for gifting a sub to ${recipient} and supporting the elderly iwdOld!`
-    );
   });
 
-  event.on("onCommunitySub", async ({ channel, gifterName, giftInfo, msg }: CommunitySubEvent) => {
-    const previousGiftCount = giftCounts.get(gifterName) ?? 0;
-    giftCounts.set(gifterName, previousGiftCount + giftInfo.count);
-    chatClient.say(channel, `Thank you @${gifterName} for gifting ${giftInfo.count} subs to support the elderly iwdOld!`);
+  // Event: Community Sub Gift
+  event.on("onCommunitySub", async ({ channel, gifterName, giftInfo }: CommunitySubEvent) => {
+    const totalGifts = updateGiftCount(gifterName, giftInfo.count);
+
+    // Log and send message
+    console.log(`[CommunitySub] ${gifterName} gifted ${giftInfo.count} subs in ${channel}.`);
+    // chatClient.say(
+    //   channel,
+    //   `Thank you @${gifterName} for gifting ${giftInfo.count} subs to support the elderly iwdOld! Total gifted subs: ${totalGifts}.`
+    // );
   });
+
 
   event.on("onResub", async ({ channel, user, subInfo, msg }: ResubEvent) => {
     const months: number = subInfo?.months ?? 0;
     const isPrime: boolean = subInfo?.isPrime ?? false;
     const streak: number | undefined = subInfo?.streak;
 
-    // Message Templates
-    const messages = {
-      prime: (user: string, months: number) =>
-          `Thank you @${user} for subscribing with a Prime sub to the elderly iwdOld ${channel} for ${months} month${months > 1 ? "s" : ""}!`,
-      streakPrime: (user: string, streak: number, months: number) =>
-          `Thank you @${user} for subscribing with a streak Prime sub for ${streak} month${streak > 1 ? "s" : ""} to the elderly iwdOld ${channel}! (Total: ${months} month${months > 1 ? "s" : ""})`,
-      normal: (user: string, months: number) =>
-          `Thank you @${user} for subscribing to the elderly iwdOld ${channel} for ${months} month${months > 1 ? "s" : ""}!`,
-      streakNormal: (user: string, streak: number, months: number) =>
-          `Thank you @${user} for subscribing with a streak of ${streak} month${streak > 1 ? "s" : ""} to the elderly iwdOld ${channel}! (Total: ${months} month${months > 1 ? "s" : ""})`,
-      zeroMonthsPrime: (user: string) =>
-          `Thank you @${user} for subscribing with a Prime sub to the elderly iwdOld ${channel}! Your support means a lot!`,
-      zeroMonthsNormal: (user: string) =>
-          `Thank you @${user} for subscribing to the elderly iwdOld ${channel}! Your support means a lot!`,
+    // Helper function to generate messages
+    const generateMessage = (type: string, user: string, months: number, streak?: number): string => {
+      const baseText = `Thank you @${user} for subscribing to the elderly iwdOld ${channel}`;
+      switch (type) {
+        case "prime":
+          return `${baseText} with a Prime sub for ${months} month${months > 1 ? "s" : ""}!`;
+        case "streakPrime":
+          return `${baseText} with a streak Prime sub for ${streak} month${streak! > 1 ? "s" : ""}! (Total: ${months} month${months > 1 ? "s" : ""})`;
+        case "normal":
+          return `${baseText} for ${months} month${months > 1 ? "s" : ""}!`;
+        case "streakNormal":
+          return `${baseText} with a streak of ${streak} month${streak! > 1 ? "s" : ""}! (Total: ${months} month${months > 1 ? "s" : ""})`;
+        case "zeroMonthsPrime":
+          return `${baseText} with a Prime sub! Your support means a lot!`;
+        case "zeroMonthsNormal":
+          return `${baseText}! Your support means a lot!`;
+        default:
+          return `${baseText}!`;
+      }
     };
 
-    // Determine Message and Logging
-    let message: string;
+    // Determine message type
+    let messageType: string;
     if (months === 0) {
-      if (isPrime) {
-        message = messages.zeroMonthsPrime(user);
-        console.log(`[Subscription] ${user} subscribed with a Prime sub in ${channel} (0 months, possibly new).`);
-      } else {
-        message = messages.zeroMonthsNormal(user);
-        console.log(`[Subscription] ${user} subscribed in ${channel} (0 months, possibly new).`);
-      }
-    } else if (isPrime && streak) {
-      message = messages.streakPrime(user, streak, months);
-      console.log(`[Subscription] ${user} has a Prime streak sub in ${channel} for ${streak} month(s) (Total: ${months} month(s)).`);
+      messageType = isPrime ? "zeroMonthsPrime" : "zeroMonthsNormal";
     } else if (isPrime) {
-      message = messages.prime(user, months);
-      console.log(`[Subscription] ${user} subscribed with Prime in ${channel} for ${months} month(s).`);
-    } else if (streak) {
-      message = messages.streakNormal(user, streak, months);
-      console.log(`[Subscription] ${user} subscribed normally in ${channel} with a streak of ${streak} month(s) (Total: ${months} month(s)).`);
+      messageType = streak ? "streakPrime" : "prime";
     } else {
-      message = messages.normal(user, months);
-      console.log(`[Subscription] ${user} subscribed normally in ${channel} for ${months} month(s).`);
+      messageType = streak ? "streakNormal" : "normal";
     }
 
-    // Send the determined message
-    chatClient.say(channel, message);
+    // Generate message
+    const message = generateMessage(messageType, user, months, streak);
+
+    // Log and send the message
+    console.log(`[Resubscription] ${user} in ${channel}: ${message}`);
+    // chatClient.say(channel, message);
   });
 }
 
@@ -402,7 +436,7 @@ async function subEvents(chatClient: ChatClient): Promise<void> {
     if (isSubscribingEnabled) {
       event.emit("onResub", { channel, user, subInfo, msg });
     } else {
-      console.log(`${user} subscribed in ${channel}: for ${subInfo.months} month`)
+      console.log(`${user} subscribed ${subInfo.isPrime} in ${channel}: for ${subInfo.months} month`)
     }
   });
 

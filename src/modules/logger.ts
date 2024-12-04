@@ -7,11 +7,25 @@ import {
   channelColors,
   updateChannelColor,
 } from "../utils/async config.js";
+
 import { ChatMessage } from "@twurple/chat";
 import chalk, { ChalkInstance } from "chalk";
-let { red, blue, green, white, greenBright, cyan } = chalk;
 
-export let roleToRoleColor = new Map<string, ChalkInstance>([
+/**
+ * Description placeholder
+ * @date 1:29:30 pm
+ *
+ * @type {*}
+ */
+let { red, blue, green, white, greenBright, cyan }: ChalkInstance = chalk;
+
+/**
+ * Description placeholder
+ * @date 1:29:30 pm
+ *
+ * @type {*}
+ */
+export let roleToRoleColor: Map<string, ChalkInstance> = new Map<string, ChalkInstance>([
   ["self", cyan],
   ["broadcaster", red],
   ["moderator", blue],
@@ -20,7 +34,13 @@ export let roleToRoleColor = new Map<string, ChalkInstance>([
   ["pleb", white],
 ]);
 
-const customLevels = {
+/**
+ * Description placeholder
+ * @date 1:29:30 pm
+ *
+ * @type {{ levels: { fatal: number; error: number; warn: number; success: number; info: number; debug: number; trace: number; }; colors: { fatal: string; error: string; warn: string; success: string; info: string; debug: string; trace: string; }; }}
+ */
+const customLevels: { levels: { fatal: number; error: number; warn: number; success: number; info: number; debug: number; trace: number; }; colors: { fatal: string; error: string; warn: string; success: string; info: string; debug: string; trace: string; }; } = {
   levels: {
     fatal: 0, // Highest priority
     error: 1,
@@ -43,7 +63,13 @@ const customLevels = {
 };
 addColors(customLevels.colors);
 
-const jsonFormat = format.combine(
+/**
+ * Description placeholder
+ * @date 1:29:30 pm
+ *
+ * @type {*}
+ */
+const jsonFormat: any = format.combine(
   format.json(),
   format.colorize(),
   format.align(),
@@ -56,13 +82,24 @@ const jsonFormat = format.combine(
  * @returns {Logger} Winston logger instance
  */
 
-const channelLoggersMap = new Map();
-
+const channelLoggersMap: Map<string, any> = new Map();
+//TODO FINISH FUNCTION TO CREATE COMMANDS, DEL COMMANDS AND EDIT COMMANDS. 
+/**
+ * Description placeholder
+ * @date 1:29:30 pm
+ *
+ * @async
+ * @param {string} channel
+ * @param {string} user
+ * @param {ChatMessage} msg
+ * @returns {Promise<Logger>}
+ */
 const initializeChannelLogger = async (
   channel: string,
   user: string,
   msg: ChatMessage
 ): Promise<Logger> => {
+  let { isMod, isVip, isSubscriber, isBroadcaster, userId } = msg.userInfo
   if (channelLoggersMap.has(channel)) {
     return channelLoggersMap.get(channel);
   }
@@ -84,29 +121,29 @@ const initializeChannelLogger = async (
     level: "info",
     format: format.combine(
       format.colorize(), // Enable color formatting
-      format.timestamp({ format: () => getTimeFormat() }),
+      format.timestamp({ format: getTimeFormat() }),
       format.metadata(),
-      format.printf(({ level, message, timestamp, metadata }) => {
+      format.printf(({ level, message}) => {
         try {
           const metadataParts: string[] = [];
-          let baseColorInstance: ChalkInstance = getChannelColor(channel);
-          // let baseColorInstance: ChalkInstance = getRoleBasedColor(metadata, getChannelColor(channel));
-          if (metadata?.userId === botId) {
+          let baseColorInstance: ChalkInstance = getChannelColor(channel)
+
+          if (userId === botId) {
             metadataParts.push("self");
             baseColorInstance =
               roleToRoleColor.get("self") ?? baseColorInstance;
-          } else if (metadata?.isBroadcaster) {
+          } else if (isBroadcaster) {
             metadataParts.push("broadcaster");
             baseColorInstance =
               roleToRoleColor.get("broadcaster") ?? baseColorInstance;
-          } else if (metadata?.isMod) {
+          } else if (isMod) {
             metadataParts.push(`Mod`);
             baseColorInstance =
               roleToRoleColor.get("moderator") ?? baseColorInstance;
-          } else if (metadata?.isVip) {
+          } else if (isVip) {
             metadataParts.push(`VIP`);
             baseColorInstance = roleToRoleColor.get("vip") ?? baseColorInstance;
-          } else if (metadata?.isSubscriber) {
+          } else if (isSubscriber) {
             metadataParts.push("subscriber");
             baseColorInstance =
               roleToRoleColor.get("subscriber") ?? baseColorInstance;
@@ -117,18 +154,17 @@ const initializeChannelLogger = async (
 
           const metadataString: string =
             metadataParts.length > 0 ? `[${metadataParts.join(" | ")}]` : "";
-          let baseMessage: string = `${metadata.timestamp} ${metadataString} [CHAT ${level}]: ${message}`;
-          let formattedMessage = baseColorInstance(baseMessage);
+          let baseMessage: string = `${getTimeFormat()} ${metadataString} [CHAT ${level}]: ${message}`;
 
-          return formattedMessage;
+          return baseColorInstance(baseMessage);
         } catch (error) {
           console.error("Error formatting chat message:", error);
-          return `${timestamp} [CHAT ${level}]: [ERROR] ${message}`;
+          return `${getTimeFormat()} [CHAT ${level}]: [ERROR] ${message}`;
         }
       })
     ),
     transports: [
-      new transports.Console(),
+      new transports.Console({ silent: false }),
       new transports.DailyRotateFile({
         filename: `${channel}-chat-%DATE%.log`,
         dirname: `./Logs/${channel}/`,
@@ -168,7 +204,69 @@ const httpRequestLogger: Logger = createLogger({
     new transports.File({ filename: "http.log" }),
   ],
 });
-
+// export function systemLogger() {
+// const logger = createLogger({
+//     level: 'info',
+//     format: format.combine(
+//       format.timestamp({ format: () => getTimeFormat() }), // Use DATE_FORMAT for timestamp
+//       format.printf(
+//         ({ level, message, timestamp }) =>
+//           `${timestamp} [SYSTEM ${level}]: ${message}`
+//       )
+//     ),
+//     transports: [new transports.Console(),
+//       new transports.DailyRotateFile({
+//         filename: `SYSTEM-%DATE%.log`,
+//         dirname: `./Logs/`,
+//         json: false,
+//         datePattern: "YYYY-MM-DD",
+//         zippedArchive: true,
+//         maxSize: "20m",
+//         maxFiles: "3d",
+//         format: format.combine(
+//           format.timestamp({ format: () => getTimeFormat() }), // Use DATE_FORMAT for timestamp
+//           format.printf(({ level, message, timestamp }) =>
+//             stripAnsi(`${timestamp} [SYSTEM ${level}]: ${message}`)
+//           )
+//         ),
+//       })
+//     ]
+//   })
+// }
+export const systemLogger: Logger = createLogger({
+  level: 'info',
+  format: format.combine(
+    format.timestamp({ format: () => getTimeFormat() }), // Use DATE_FORMAT for timestamp
+    format.printf(
+      ({ level, message, timestamp }) =>
+        `${timestamp} [SYSTEM ${level}]: ${message}`
+    )
+  ),
+  transports: [new transports.Console(),
+    new transports.DailyRotateFile({
+      filename: `SYSTEM-%DATE%.log`,
+      dirname: `./Logs/`,
+      json: false,
+      datePattern: "YYYY-MM-DD",
+      zippedArchive: true,
+      maxSize: "20m",
+      maxFiles: "3d",
+      format: format.combine(
+        format.timestamp({ format: () => getTimeFormat() }), // Use DATE_FORMAT for timestamp
+        format.printf(({ level, message, timestamp }) =>
+          stripAnsi(`${timestamp} [SYSTEM ${level}]: ${message}`)
+        )
+      ),
+    })
+  ]
+})
+/**
+ * Description placeholder
+ * @date 1:29:30 pm
+ *
+ * @param {string} channelName
+ * @returns {ChalkInstance}
+ */
 function getChannelColor(channelName: string): ChalkInstance {
   const hexColor = channelColors[channelName];
   return hexColor ? chalk.hex(hexColor) : chalk.white; // Default to white if no color is set

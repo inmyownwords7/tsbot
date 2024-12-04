@@ -1,6 +1,6 @@
 import { AccessToken } from '@twurple/auth';
 import { botId } from "../formatting/constants.js";
-import { RefreshingAuthProvider } from "../index.js";
+import { RefreshingAuthProvider } from "@twurple/auth";
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { ApiClient } from "@twurple/api";
 import { readFile, writeFile } from "fs/promises";
@@ -43,17 +43,17 @@ interface AuthConfig {
  * @type {AuthConfig}
  */
 const credentials: AuthConfig = {
-  clientId: "k3kjal6wl67bmcm0avngpkpnikaseh",
-  clientSecret: "ybmuwh1pqyk7alcwchyyqwydvd8jjj",
+  clientId: process.env.CLIENTID || "k3kjal6wl67bmcm0avngpkpnikaseh",
+  clientSecret: process.env.CLIENTSECRET ||"ybmuwh1pqyk7alcwchyyqwydvd8jjj",
 };
-
+console.log(credentials.clientId + " "+ credentials.clientSecret)
 /**
  * Description placeholder
  * @date 10:30:52 am
  *
  * @type {string}
  */
-const userId: string = "132881296";
+
 /**
  * Description placeholder
  * @date 10:30:52 am

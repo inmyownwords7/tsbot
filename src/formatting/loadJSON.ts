@@ -1,7 +1,8 @@
 import path from "path";
-import { promises } from "fs";
+import { promises, readFileSync } from "fs";
 import { MESSAGES, EVENT_PATH } from "./constants.js"; // Path to your messages.json file
-import { chatClient, join } from "../bot.js";
+import { chatClient } from "../bot.js";
+
 
 /**
  * Localized messages loaded from the JSON file.
@@ -126,5 +127,7 @@ async function getEventMessages(
   
   return message;
 }
+
+
 // Export the functions
 export { getLocalizedMessages, getEventMessages };

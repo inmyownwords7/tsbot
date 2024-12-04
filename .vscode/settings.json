@@ -20,5 +20,8 @@
     "docs",
     "dist",
     "vite-project"
+  ],
+  "githubPullRequests.ignoredPullRequestBranches": [
+    "main"
   ]
 }

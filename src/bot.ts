@@ -1,9 +1,8 @@
-/// <reference path="../types.d.ts" />
+/// <reference path="./types/types.d.ts" />
 // import en from "formatting/messages.json"
 // en
-import {
-  ChatClient
-} from "./index.js";
+import { ChatClient } from "@twurple/chat";
+import path from "path";
 /**@this Maps cannot be used for global exports*/
 import {
   channelsMap,
@@ -12,6 +11,7 @@ import {
 } from "./utils/async config.js";
 import { authProvider } from "./modules/auth.js";
 import registerChatClientEvents from "./modules/events.js";
+
 
 // **@chatClient declaration */
 /**

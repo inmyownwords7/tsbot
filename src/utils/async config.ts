@@ -198,12 +198,8 @@ function jsonReviver(key: string, value: unknown): unknown {
  *
  * @async
  * @returns {Promise<void>}
- *         akanemsko: "",
-        tfblade: "59308271", // Set known user ID for tfblade
-        iwdominate: "25653002", 
-        perkz_lol: "",
-      }
  */
+
 async function setupConfig(): Promise<void> {
   try {
     const fileExists: boolean = await fs
