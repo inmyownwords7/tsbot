@@ -15,7 +15,11 @@
     "debug": "npm run build && node --no-deprecation --inspect dist/src/app.js",
     "inspect": "npm run build && node --inspect dist/src/app.js",
     "docs": "typedoc --out docs src/bot.ts",
-    "test": "jest"
+    "test": "jest",
+    "start:dev": "NODE_ENV=development && npm start",
+    "start:staging": "ENVIRONMENT=staging npm run start",
+    "start:prod": "NODE_ENV=production && npm start",
+    "start:ci": "ENVIRONMENT=ci npm run start"
   },
   "keywords": [],
   "author": "",
@@ -48,6 +52,7 @@
     "chalk": "^5.3.0",
     "collections": "^5.1.13",
     "dotenv": "^16.4.5",
+    "dotenv-vault": "^1.26.2",
     "express": "^4.21.0",
     "module-alias": "^2.2.3",
     "promise-fs": "^2.1.1",

@@ -1,0 +1,30 @@
+name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '23'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Load Production environment variables
+        env:
+          DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
+        run: npx dotenv-vault pull --environment development
+
+      - name: Run application
+        run: npm update

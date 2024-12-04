@@ -46,7 +46,7 @@ const credentials: AuthConfig = {
   clientId: process.env.CLIENTID || "k3kjal6wl67bmcm0avngpkpnikaseh",
   clientSecret: process.env.CLIENTSECRET ||"ybmuwh1pqyk7alcwchyyqwydvd8jjj",
 };
-
+console.log(credentials.clientId + " "+ credentials.clientSecret)
 /**
  * Description placeholder
  * @date 10:30:52 am

@@ -1,13 +1,25 @@
 import 'tsconfig-paths/register.js';
 import express, { Request, Response, NextFunction } from "express";
-// import morgan from "morgan";
-import dotenv from "dotenv";
+import dotenv from "dotenv"
 import { bot } from "./bot.js"
+import fs from "fs"
 
+const environment = process.env.NODE_ENV;
+const envFilePath = process.cwd() + `/.env.${environment}`;
+console.log(envFilePath)
+if (fs.existsSync(envFilePath)) {
+  dotenv.config({ path: envFilePath, encoding: 'utf-8', debug: true });
+  console.log(`Environment file loaded: ${envFilePath}`);
+} else {
+  dotenv.config(); // Load default .env file
+  console.warn(`Environment file not found for ${environment}, loaded default .env`);
+}
 
-dotenv.config();
+console.log("This is they key "+process.env.NODE_ENV)
+// console.log(process.env.NODE_ENV)
+
 const app = express();
-const port: number = Number(process.env.PORT) || 29801;
+const port: number = Number(process.env.PORT) || 29800;
 
 // app.use(
 //   morgan("combined", {

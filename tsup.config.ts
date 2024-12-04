@@ -3,7 +3,7 @@ import alias from 'esbuild-plugin-alias';
 
 export default defineConfig({
   entry: ['src/app.ts'],            // Entry point of your application
-  format: ['esm', 'cjs'],                  // Output ESM format
+  format: ['esm', 'cjs'],           // Output ESM format
   dts: true,                        // Generate declaration files
   sourcemap: true,                  // Include sourcemaps for debugging
   clean: true,                      // Clean the output directory before building
