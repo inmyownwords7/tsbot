@@ -2,7 +2,7 @@ import { defineConfig } from 'tsup';
 import alias from 'esbuild-plugin-alias';
 
 export default defineConfig({
-  entry: ['src/app.ts'],            // Entry point of your application
+  entry: ['src/app.ts'],            // Entry point of your application remove "vite-project/**/*"
   format: ['esm', 'cjs'],           // Output ESM format
   dts: true,                        // Generate declaration files
   sourcemap: true,                  // Include sourcemaps for debugging
