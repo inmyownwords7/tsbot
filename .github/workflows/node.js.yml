@@ -21,6 +21,23 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Check for vulnerabilities
+        run: npm audit --audit-level=moderate
+
+      - name: Generate vulnerability report
+        run: npm audit --json > audit-report.json
+
+      - name: Check for outdated dependencies
+        run: npx npm-check-updates --json-upgraded > outdated-dependencies.json
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: audit-and-dependency-reports
+          path: |
+            audit-report.json
+            outdated-dependencies.json
+
       - name: Load environment variables
         env:
           DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
