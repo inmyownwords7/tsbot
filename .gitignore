@@ -8,6 +8,11 @@
 !.env.project
 !.env.vault.env
 .env.vault
+# Ignore all .env files
+.env
+*.env
+.env.*
+# .env.* removes all files that starts with .env.*
 ### Node ###
 # Logs
 logs
