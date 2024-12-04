@@ -21,10 +21,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Load Production environment variables
+      - name: Load environment variables
         env:
-          DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
+        DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
         run: npx dotenv-vault pull --environment development
-
-      - name: Run application
-        run: npm update
+        continue-on-error: true
