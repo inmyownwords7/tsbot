@@ -3,7 +3,7 @@ import chalk, { ChalkInstance } from "chalk";
 import { roleToRoleColor } from "../modules/logger.js";
 import { channelsMap } from "./async config.js";
 import { getUserIdFromUsername } from "./userIdUtils.js";
-import { botId } from "../formatting/constants.js";
+import { BOT_ID } from "../formatting/constants.js";
 import { api } from "../modules/auth.js";
 import { HelixUser } from "@twurple/api";
 
@@ -123,7 +123,7 @@ async function banUser(channel: string, user: string, duration: number, reason: 
         return;
     }
 
-    await api.asUser(botId, async (ctx) => {
+    await api.asUser(BOT_ID, async (ctx) => {
         return ctx.moderation.banUser(channelId, {
             duration: duration,
             reason: reason,
@@ -241,7 +241,7 @@ setInterval(() => {
 //   // }, INTERVALDURATION)
 
 //   setInterval(repeatMessage, INTERVALDURATION);
-//   setInterval(startChecking, 60 * 1000); // Repeat every 1 minutes
+//   setInterval(startChecking, 60 * 1000); // Repeat every 1 minute
 // }
 
 // if (toggle) {

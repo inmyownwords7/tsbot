@@ -15,11 +15,7 @@
     "debug": "npm run build && node --no-deprecation --inspect dist/src/app.js",
     "inspect": "npm run build && node --inspect dist/src/app.js",
     "docs": "typedoc --out docs src/bot.ts",
-    "test": "jest",
-    "start:dev": "NODE_ENV=development && npm start",
-    "start:staging": "ENVIRONMENT=staging npm run start",
-    "start:prod": "NODE_ENV=production && npm start",
-    "start:ci": "ENVIRONMENT=ci npm run start"
+    "test": "jest"
   },
   "keywords": [],
   "author": "",

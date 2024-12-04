@@ -1,191 +1,25 @@
-// async function connectionEvents(chatClient: ChatClient): Promise<void> {
-//   chatClient.onJoin((channel: string, user: string): void => {
-//     console.log(
-//       colors.defaultColor(`${getDynamicDate()}: ${user} has joined ${channel}`)
-//     );
-//   });
+name: SSH Access Workflow
 
-//   chatClient.onDisconnect((manually: boolean, reason: Error | undefined) => {
-//     console.log("Disconnected to Twitch chat");
-//   });
+on:
+  push:
+    branches:
+      - main
 
-//   chatClient.onConnect(() => {
-//     /*
-//           @disabled */
-//     // console.log("Connected to Twitch");
-//   });
+jobs:
+  ssh-access:
+    runs-on: ubuntu-latest
 
-//   chatClient.onAuthenticationSuccess(() => {});
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+# ssh key should locate in secrets add the .pub key into deploy key
+      - name: Set up SSH Agent
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-//   chatClient.onAuthenticationFailure((error) => {
-//     console.error("Authentication failed:", error);
-//   });
-// }
+      - name: Test SSH Connection
+        run: ssh -T git@github.com
 
-// Subscription event handling
-// async function subEvents(chatClient: ChatClient): Promise<void> {
-//   // Handle new subscriptions
-//   const handleNewSubscription = (
-//     channel: string,
-//     user: string,
-//     subInfo: ChatSubInfo,
-//     msg: UserNotice
-//   ): void => {
-//     try {
-//       const channelConfig = channelsMap.get(channel);
-//       if (channelConfig?.shouldThankSubscription) {
-//         chatClient.say(
-//           channel,
-//           `${user} has just subscribed for ${subInfo.months} months!`
-//         );
-//         event.emit("newSub", { channel, user, subInfo });
-//       }
-//     } catch (error) {
-//       console.error("Error handling new subscription event:", error);
-//     }
-//   };
-
-//   // Handle resubscriptions
-//   const handleResubscription = (
-//     channel: string,
-//     user: string,
-//     subInfo: ChatSubInfo,
-//     msg: UserNotice
-//   ): void => {
-//     try {
-//       const channelConfig = channelsMap.get(channel);
-//       if (channelConfig?.shouldThankSubscription) {
-//         chatClient.say(
-//           channel,
-//           `Thanks @${user} for resubscribing for ${subInfo.months} months!`
-//         );
-//         event.emit("resub", { channel, user, subInfo });
-//       }
-//     } catch (error) {
-//       console.error("Error handling resubscription event:", error);
-//     }
-//   };
-
-//   // Handle gifted subscriptions
-//   const handleSubGift = (
-//     channel: string,
-//     user: string,
-//     subInfo: ChatSubGiftInfo,
-//     msg: UserNotice
-//   ): void => {
-//     try {
-//       const gifter = subInfo.gifter;
-//       chatClient.say(
-//         channel,
-//         `Thanks @${gifter} for gifting a sub to ${subInfo.displayName}!`
-//       );
-//       event.emit("subgift", { channel, gifter, subInfo });
-//     } catch (error) {
-//       console.error("Error handling gifted subscription event:", error);
-//     }
-//   };
-
-//   // Handle community gifted subscriptions
-//   const handleCommunitySub = (
-//     channel: string,
-//     user: string,
-//     subInfo: ChatCommunitySubInfo,
-//     msg: UserNotice
-//   ): void => {
-//     try {
-//       chatClient.say(
-//         channel,
-//         `${user} has gifted ${subInfo.count} subs to the community!`
-//       );
-//       event.emit("communitySub", { channel, user, subInfo });
-//     } catch (error) {
-//       console.error("Error handling community subscription event:", error);
-//     }
-//   };
-
-//   // Set up event handlers for different subscription types
-//   chatClient.onSub(handleNewSubscription);
-//   chatClient.onResub(handleResubscription);
-//   chatClient.onSubGift(handleSubGift);
-//   chatClient.onCommunitySub(handleCommunitySub);
-// }
-async function connectionEvents(chatClient: ChatClient): Promise<void> {
-  chatClient.onJoin((channel: string, user: string): void => {
-    console.log(
-      colors.defaultColor(`${getDynamicDate()}: ${user} has joined ${channel}`)
-    );
-  });
-
-  chatClient.onDisconnect((manually: boolean, reason: Error | undefined) => {
-    console.log("Disconnected to Twitch chat");
-  });
-
-  chatClient.onConnect(() => {
-    /*
-          @disabled */
-    // console.log("Connected to Twitch");
-  });
-
-  chatClient.onAuthenticationSuccess(() => {});
-
-  chatClient.onAuthenticationFailure((error) => {
-    console.error("Authentication failed:", error);
-  });
-}
-async function connectionEvents(chatClient: ChatClient): Promise<void> {
-  chatClient.onJoin((channel: string, user: string): void => {
-    console.log(
-      colors.defaultColor(`${getDynamicDate()}: ${user} has joined ${channel}`)
-    );
-  });
-
-  chatClient.onDisconnect((manually: boolean, reason: Error | undefined) => {
-    console.log("Disconnected to Twitch chat");
-  });
-
-  chatClient.onConnect(() => {
-    /*
-          @disabled */
-    // console.log("Connected to Twitch");
-  });
-
-  chatClient.onAuthenticationSuccess(() => {});
-
-  chatClient.onAuthenticationFailure((error) => {
-    console.error("Authentication failed:", error);
-  });
-}
-
-async function subEvents(chatClient: ChatClient): Promise<void> {
-  chatClient.onSub((channel: string, user: string, subInfo: ChatSubInfo, msg: UserNotice) => {
-    getEventMessages("subscriptionEvent", "subscription_message", {
-      channel,
-      user,
-      months: subInfo.months,
-    }).then((message) => console.log(message));
-  });
-
-  chatClient.onResub((channel: string, user: string, subInfo: ChatSubInfo, msg: UserNotice) => {
-    getEventMessages("subscriptionEvent", "resub_message", {
-      channel,
-      user,
-      months: subInfo.months,
-    }).then((message) => console.log(message));
-  });
-
-  chatClient.onSubGift((channel: string, user: string, subInfo: ChatSubGiftInfo, msg: UserNotice) => {
-    getEventMessages("subscriptionEvent", "gift_subscription_message", {
-      channel,
-      gifter: subInfo.gifter,
-      user: subInfo.displayName,
-    }).then((message) => console.log(message));
-  });
-
-  chatClient.onCommunitySub((channel: string, user: string, subInfo: ChatCommunitySubInfo, msg: UserNotice) => {
-    getEventMessages("subscriptionEvent", "community_sub_message", {
-      channel,
-      user,
-      count: subInfo.count,
-    }).then((message) => console.log(message));
-  });
-}
+      - name: Clone Private Repository
+        run: git clone git@github.com:inmyownwords7/tsbot.git

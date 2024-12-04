@@ -1,6 +1,6 @@
 import { addColors, createLogger, format, Logger, transports } from "winston";
 import "winston-daily-rotate-file";
-import { botId, getTimeFormat } from "../formatting/constants.js";
+import { BOT_ID, getTimeFormat } from "../formatting/constants.js";
 import stripAnsi from "strip-ansi";
 import {
   channelsMap,
@@ -128,7 +128,7 @@ const initializeChannelLogger = async (
           const metadataParts: string[] = [];
           let baseColorInstance: ChalkInstance = getChannelColor(channel)
 
-          if (userId === botId) {
+          if (userId === BOT_ID) {
             metadataParts.push("self");
             baseColorInstance =
               roleToRoleColor.get("self") ?? baseColorInstance;

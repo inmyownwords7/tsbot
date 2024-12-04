@@ -1,5 +1,5 @@
 import { AccessToken } from '@twurple/auth';
-import { botId } from "../formatting/constants.js";
+import { BOT_ID } from "../formatting/constants.js";
 import { RefreshingAuthProvider } from "@twurple/auth";
 import { EventSubWsListener } from '@twurple/eventsub-ws';
 import { ApiClient } from "@twurple/api";
@@ -10,24 +10,22 @@ import { readFile, writeFile } from "fs/promises";
  * @date 10:30:53 am
  *
  * @interface AuthConfig
- * @typedef {AuthConfig}
+ * @type {AuthConfig}
  */
 interface AuthConfig {
   /**
-   * Description placeholder
-   * @date 10:30:53 am
-   *
+   * Client ID for authentication
    * @type {string}
    */
   clientId: string;
+
   /**
-   * Description placeholder
-   * @date 10:30:53 am
-   *
+   * Client Secret for authentication
    * @type {string}
    */
   clientSecret: string;
 }
+
 
 /**
  * Description placeholder
@@ -43,9 +41,15 @@ interface AuthConfig {
  * @type {AuthConfig}
  */
 const credentials: AuthConfig = {
-  clientId: process.env.CLIENTID || "k3kjal6wl67bmcm0avngpkpnikaseh",
-  clientSecret: process.env.CLIENTSECRET ||"ybmuwh1pqyk7alcwchyyqwydvd8jjj",
+  clientId:  process.env.CLIENT_ID || "",
+  clientSecret: process.env.CLIENT_SECRET || ""
 };
+
+if(!credentials.clientId || !credentials.clientSecret) {
+  console.error("Environment variables CLIENT_ID and CLIENT_SECRET must be set.");
+process.exit(1)
+}
+
 console.log(credentials.clientId + " "+ credentials.clientSecret)
 /**
  * Description placeholder
@@ -60,6 +64,7 @@ console.log(credentials.clientId + " "+ credentials.clientSecret)
  *
  * @type {*}
  */
+
 const authProvider: RefreshingAuthProvider = new RefreshingAuthProvider(credentials);
 
 /**
@@ -72,7 +77,7 @@ const authProvider: RefreshingAuthProvider = new RefreshingAuthProvider(credenti
 const initializeAuthProvider = async (): Promise<void> => {
   try {
     const tokenData: AccessToken = JSON.parse(
-      await readFile(`./tokens.${botId}.json`, "utf-8")
+      await readFile(`./tokens.${BOT_ID}.json`, "utf-8")
     );
 
     // Add token with required intents: chat, api, and eventsub

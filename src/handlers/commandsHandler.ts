@@ -3,7 +3,7 @@ import { ChatMessage } from "@twurple/chat";
 import { api } from "../modules/auth.js"
 import { banUser, isCommand, isValidUsername } from "../utils/helpers.js";
 import { getUserIdFromUsername } from "../utils/userIdUtils.js";
-import { botId } from "../formatting/constants.js";
+import { BOT_ID } from "../formatting/constants.js";
 import { channelsMap } from "../utils/async config.js";
 import { regexLang } from "@src/formatting/regexp.js";
 import { get } from "node_modules/axios/index.cjs";
@@ -152,7 +152,7 @@ async function timeoutHandler(
     console.log(`Timeout: ${targetUser} ${id} for ${duration}s. Reason: ${reason}`);
 
     try {
-        await api.asUser(botId, (ctx) =>
+        await api.asUser(BOT_ID, (ctx) =>
             ctx.moderation.banUser(channelId, {
                 user: id,
                 duration,

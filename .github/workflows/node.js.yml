@@ -1,3 +1,4 @@
+# https://www.yamllint.com/ for formatting.
 name: CI Workflow
 
 on:

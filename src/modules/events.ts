@@ -4,7 +4,7 @@ import {
 } from "@twurple/chat";
 import { logChannelMessage, systemLogger } from "./logger.js";
 import { channelsMap } from "../utils/async config.js";
-import { botId, getTimeFormat } from "../formatting/constants.js";
+import { BOT_ID, getTimeFormat } from "../formatting/constants.js";
 import { eventSubListener } from "./auth.js";
 import { foreignLanguageHandler, timeoutHandler } from "../handlers/commandsHandler.js";
 /**
@@ -99,7 +99,7 @@ async function eventHandlers(event: EventEmitter): Promise<void> {
     }
 
     const roles = [
-      { role: "self", condition: userId === botId },
+      { role: "self", condition: userId === BOT_ID },
       { role: "founder", condition: isFounder },
       { role: "broadcaster", condition: isBroadcaster },
       { role: "moderator", condition: isMod },
@@ -503,7 +503,7 @@ async function channelEvents(chatClient: ChatClient): Promise<void> {
     event.emit("uniquemode", { channel, enabled });
   });
 }
-eventSubListener.onChannelBan(botId, (event) => {
+eventSubListener.onChannelBan(BOT_ID, (event) => {
   console.log('Ban event:', event);
 });
 /**
@@ -511,12 +511,12 @@ eventSubListener.onChannelBan(botId, (event) => {
  * @date 10:29:01 am
  *
  * @param {*} userInfo
- * @param {string} botId
+ * @param {string} BOT_ID
  * @returns {string[]}
  */
-function getRoles(userInfo: any, botId: string): string[] {
+function getRoles(userInfo: any, BOT_ID: string): string[] {
   return [
-    { role: "self", condition: userInfo.userId === botId },
+    { role: "self", condition: userInfo.userId === BOT_ID },
     { role: "founder", condition: userInfo.isFounder },
     { role: "broadcaster", condition: userInfo.isBroadcaster },
     { role: "moderator", condition: userInfo.isMod },

@@ -153,9 +153,9 @@ dist
 
 *.json
 .json*
-node_modules/
 package-lock.json
 node_modules/.package-lock.json
-
-
+.env
+*.env
+tokens.132881296.json
 !.env.vault
