@@ -1,18 +1,25 @@
 import 'tsconfig-paths/register.js';
-import 'dotenv-vault/config';
 import express, { Request, Response, NextFunction } from "express";
 import dotenv from "dotenv"
 import { bot } from "./bot.js"
-import path from "path";
+import fs from "fs"
 
-path.dirname("/")
-dotenv.config({
-  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env.development',
-});
-console.log(process.env)
+const environment = process.env.NODE_ENV;
+const envFilePath = process.cwd() + `/.env.${environment}`;
+console.log(envFilePath)
+if (fs.existsSync(envFilePath)) {
+  dotenv.config({ path: envFilePath, encoding: 'utf-8', debug: true });
+  console.log(`Environment file loaded: ${envFilePath}`);
+} else {
+  dotenv.config(); // Load default .env file
+  console.warn(`Environment file not found for ${environment}, loaded default .env`);
+}
+
+console.log("This is they key "+process.env.NODE_ENV)
+// console.log(process.env.NODE_ENV)
 
 const app = express();
-const port: number = Number(process.env.PORT) || 29801;
+const port: number = Number(process.env.PORT) || 29800;
 
 // app.use(
 //   morgan("combined", {
