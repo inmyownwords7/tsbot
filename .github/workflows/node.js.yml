@@ -23,6 +23,6 @@ jobs:
 
       - name: Load environment variables
         env:
-        DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
+          DOTENV_KEY: ${{ secrets.DOTENV_KEY }}
         run: npx dotenv-vault pull development
         continue-on-error: true
