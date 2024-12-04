@@ -1,6 +1,6 @@
 {
-    "accessToken": "yw0s6scvwi60biif89vfk5asqck4ww",
-    "refreshToken": "23q7zze9rokdc8rh7w6y43kqidmrhq7didkonc4inst7irfy4x",
+    "accessToken": "",
+    "refreshToken": "",
     "scope": [
         "analytics:read:extensions",
         "analytics:read:games",
