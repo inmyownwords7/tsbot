@@ -43,6 +43,7 @@
     "typescript": "^5.6.2"
   },
   "dependencies": {
+    "@oclif/plugin-warn-if-update-available": "^3.1.24",
     "@twurple/api": "^7.2.0",
     "@twurple/auth": "^7.2.0",
     "@twurple/chat": "^7.2.0",

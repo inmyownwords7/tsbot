@@ -1,0 +1,16 @@
+version: 2
+updates:
+  - package-ecosystem: "npm" # Or another package ecosystem like "docker", "maven", etc.
+    directory: "/"           # Location of the package manifest
+    schedule:
+      interval: "daily"      # Schedule for updates
+    commit-message:
+      prefix: "deps"
+    ignore:
+      - dependency-name: "lodash" # Example of ignoring a package
+        versions: ["<4.17.21"]
+    registries:
+      github-registry:
+        type: "npm-registry"
+        url: "https://npm.pkg.github.com"
+        token: "${{secrets.GITHUB_TOKEN}}"
